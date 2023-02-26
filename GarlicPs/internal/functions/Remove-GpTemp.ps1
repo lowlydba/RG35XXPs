@@ -1,4 +1,4 @@
-function Invoke-GpDownload {
+function Remove-GpTemp {
 
     [CmdletBinding()]
     param (
