@@ -78,8 +78,8 @@
 			Write-Error -Message "Error copying personal game files: $($_.Exception.Message)"
 		}
 
-		Write-Output "🧄  GarlicOS successfully installed!"
-		Write-Output "⚠️   Be sure to copy any personal BIOS or ROM files desired into the corresponding directories."
-		Write-Output "🙏  Thanks to Black Seraph for GarlicOS - https://www.patreon.com/bePatron?u=8770518"
+		Write-Host "🧄  GarlicOS successfully installed!" -ForegroundColor DarkYellow
+		Write-Host "🙏  Thanks to Black Seraph for GarlicOS - https://www.patreon.com/bePatron?u=8770518" -ForegroundColor DarkMagenta
+		Write-Host "☕  Buy the author a coffee if you enjoy this project - https://www.buymeacoffee.com/johnmcc"-ForegroundColor Cyan
 	}
 }
