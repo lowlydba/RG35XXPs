@@ -1,4 +1,4 @@
-﻿function Install-GpGarlic {
+﻿function Update-GpGarlic {
 
 	[CmdletBinding()]
 	param (
