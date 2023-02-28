@@ -25,6 +25,7 @@ Potential improvements:
 - Publish module to PS Gallery for easier upkeep
 - Handle USB Gamepad support enabling
 - Handle ADB support enabling
+- Also support [MinUI](https://github.com/shauninman/union-minui/) install/update
 
 [7z4p]: https://www.powershellgallery.com/packages/7Zip4Powershell/
 [garlic]: https://www.patreon.com/posts/garlicos-for-76561333
