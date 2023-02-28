@@ -6,7 +6,7 @@ Only tested on Windows, YMMV.
 
 ## Requirements
 
-This module relies on [7zip4powershell][7z4p].
+This module relies on [7zip4powershell][7z4p]. Why? Because GarlicOS is released in .7zip format.
 Before importing, ensure this module is present:
 
 ```pwsh
