@@ -1,4 +1,3 @@
-function Install-GpGarlic {
 <#
 .SYNOPSIS
     Install GarlicOS!
@@ -13,7 +12,7 @@ function Install-GpGarlic {
     Optional. Where files will be downloaded and decompressed to during the installation.
 
 .PARAMETER TargetDevice
-    The target device of the SD card. 
+    The target device of the SD card.
 	Must be the DeviceID returned from 'GET-WMIOBJECT -Query "SELECT * FROM Win32_DiskDrive"'
 
 .PARAMETER ClearTempPath
@@ -28,6 +27,8 @@ function Install-GpGarlic {
 .EXAMPLE
     TBD
 #>
+function Install-GpGarlic {
+
 	[CmdletBinding()]
 	param (
 		[Parameter (Mandatory = $false)]
@@ -44,23 +45,23 @@ function Install-GpGarlic {
 		[string]$ROMPath
 	)
 	process {
-        # Hacky check for balena cli
-        try {
-            Invoke-Expression "balena" | Out-Null
-        }
-        catch {
-            Write-Error -Message "balena cli not installed and/or not in PATH environment."
-        }
+		# Hacky check for balena cli
+		try {
+			Invoke-Expression "balena" | Out-Null
+		}
+		catch {
+			Write-Error -Message "balena cli not installed and/or not in PATH environment."
+		}
 
-        $garlicPath = Join-Path -Path $TempPath -ChildPath "\GarlicOS"
+		$garlicPath = Join-Path -Path $TempPath -ChildPath "\GarlicOS"
 		$garlicUpdateZip = "RG35XX-MicroSDCardImage.7z"
-		$garlicUpdateUri = "https://www.patreon.com/file?h=76561333&i=13249827" # This changes with each update, should take in as param or scrape 
+		$garlicUpdateUri = "https://www.patreon.com/file?h=76561333&i=13249827" # This changes with each update, should take in as param or scrape
 
-        # Cleanup/Create temp path for Garlic extraction
+		# Cleanup/Create temp path for Garlic extraction
 		New-GpTemp -TempPath $TempPath -ClearTempPath $ClearTempPath -GarlicPath $garlicPath
 
-        ## Step 1 - Download & extract GarlicOS
-        # Download latest version
+		## Step 1 - Download & extract GarlicOS
+		# Download latest version
 		try {
 			if ($LocalFile -eq "") {
 				$garlicZipPath = Invoke-GpDownload -TempPath $TempPath -GarlicZip $garlicZip -GarlicUri $garlicUri
@@ -81,20 +82,21 @@ function Install-GpGarlic {
 			Write-Error -Message "Error extracting GarlicOS: $($_.Exception.Message)"
 		}
 
-        ## Step 2 - Flash garlic.img to SD
-        $garlicImg = Join-Path -Path $garlicPath -ChildPath "garlic.img"
-        Invoke-Expression -Command 'balena local flash "$garlicImg" -y --drive $TargetDevice' 
+		## Step 2 - Flash garlic.img to SD
+		$garlicImg = Join-Path -Path $garlicPath -ChildPath "garlic.img"
+		Invoke-Expression -Command 'balena local flash "$garlicImg" -y --drive $TargetDevice'
 
-        ## Step 3 - Eject and re-insert SD
-        Write-Output "Safely eject the SD card, then re-insert it."
-        Read-Host "Press enter when done."
+		## Step 3 - Eject and re-insert SD
+		Write-Output "Safely eject the SD card, then re-insert it."
+		Read-Host "Press enter when done."
 
-        ## Step 4 - Expand ROM partition
-        #TODO
+		## Step 4 - Expand ROM partition
+		#TODO
 
-        ## Step 5 - Copy personal files
+		## Step 5 - Copy personal files
 		Copy-GpPersonalFiles -BIOSPath $BIOSPath -ROMPath $ROMPath -Destination #$TargetPath
 
-        ## Tada!
-        Invoke-GpThanks
-    }
+		## Tada!
+		Invoke-GpThanks
+	}
+}
