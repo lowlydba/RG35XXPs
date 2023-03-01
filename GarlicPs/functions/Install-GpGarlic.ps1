@@ -48,7 +48,7 @@ function Install-GpGarlic {
             Invoke-Expression "balena" | Out-Null
         }
         catch {
-            Write-Error -Message "balena cli not present. Install to proceed."
+            Write-Error -Message "balena cli not installed and/or not in PATH environment."
         }
 
         $garlicPath = Join-Path -Path $TempPath -ChildPath "\GarlicOS"
