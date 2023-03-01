@@ -44,7 +44,7 @@ function Install-GpGarlic {
 		[Parameter (Mandatory = $true)]
 		[string]$TargetDevice,
 		[Parameter (Mandatory = $false)]
-		[bool]$ClearTempPath = $false,
+		[bool]$ClearTempPath = $true,
 		[Parameter (Mandatory = $false)]
 		[string]$BIOSPath,
 		[Parameter (Mandatory = $false)]
