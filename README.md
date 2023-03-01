@@ -4,6 +4,8 @@ Unofficial helper PowerShell module for installing and updating [GarlicOS by Bla
 
 Only tested on Windows, YMMV.
 
+Docs @ <https://lowlydba.github.io/GarlicPs/>
+
 ## Requirements
 
 ### PowerShell
@@ -27,11 +29,11 @@ Contributions are welcome! Please adhere to the linting rules and try to follow 
 
 Potential improvements:
 
-- Find a way to parse the os version to avoid accidental downgrades or reinstalls of same version
-- Publish module to PS Gallery for easier upkeep
-- Handle USB Gamepad support enabling
-- Handle ADB support enabling
-- Also support [MinUI](https://github.com/shauninman/union-minui/) install/update
+* Find a way to parse the os version to avoid accidental downgrades or reinstalls of same version
+* Publish module to PS Gallery for easier upkeep
+* Handle USB Gamepad support enabling
+* Handle ADB support enabling
+* Also support [MinUI](https://github.com/shauninman/union-minui/) install/update
 
 [7z4p]: https://www.powershellgallery.com/packages/7Zip4Powershell/
 [balena-cli]: https://github.com/balena-io/balena-cli/blob/master/INSTALL.md
