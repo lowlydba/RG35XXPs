@@ -13,23 +13,23 @@
 	Note: With each new version of GarlicOS, old URLs become invalid. Ensure a valid one is being passed.
 
 .PARAMETER TempPath
-    Optional. Where files will be downloaded and decompressed to during the installation.
+    Where files will be downloaded and decompressed to during the installation.
 
 .PARAMETER TargetDevice
     The target device of the SD card.
 	Must be the DeviceID returned from 'GET-WMIOBJECT -Query "SELECT * FROM Win32_DiskDrive"'
 
 .PARAMETER ClearTempPath
-    Optional. Whether to recursively empty the TempPath before using it. Recommended.
+    Whether to recursively empty the TempPath before using it. Recommended.
 
 .PARAMETER BIOSPath
-    Optional. Path to personal BIOS files that will be copied after installation.
+    Path to personal BIOS files that will be copied after installation.
 
 .PARAMETER ROMPath
-    Optional. Path to personal ROM files that will be copied after installation.
+    Path to personal ROM files that will be copied after installation.
 
 .EXAMPLE
-    TBD
+    Install-GpGarlic -GarlicUrl "https://www.patreon.com/file?h=76561333&i=13249827" -TargetDevice "\\.\PhysicalDevice2" -ClearTempPath $true
 #>
 function Install-GpGarlic {
 
