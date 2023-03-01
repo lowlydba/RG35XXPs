@@ -8,6 +8,10 @@
 .PARAMETER LocalFile
     The full path of a copy of RG35XX-MicroSDCardImage.7z locally available. If not supplied, it is downloaded.
 
+.PARAMETER GarlicURL
+    The URL of the GarlicOS update file (RG35XX-MicroSDCardImage.7z), ex: https://www.patreon.com/file?h=76561333&i=13249827
+	Note: With each new version of GarlicOS, old URLs become invalid. Ensure a valid one is being passed.
+
 .PARAMETER TempPath
     Optional. Where files will be downloaded and decompressed to during the installation.
 
@@ -31,8 +35,10 @@ function Install-GpGarlic {
 
 	[CmdletBinding()]
 	param (
-		[Parameter (Mandatory = $false)]
+		[Parameter (Mandatory = $true, ParameterSetName = "local")]
 		[string]$LocalFile,
+		[Parameter (Mandatory = $true, ParameterSetName = "remote")]
+		[string]$GarlicURL,
 		[Parameter (Mandatory = $false)]
 		[string]$TempPath = (Join-Path -Path ([System.IO.Path]::GetTempPath()) "\GarlicPs"),
 		[Parameter (Mandatory = $true)]
@@ -54,8 +60,7 @@ function Install-GpGarlic {
 		}
 
 		$garlicPath = Join-Path -Path $TempPath -ChildPath "\GarlicOS"
-		$garlicUpdateZip = "RG35XX-MicroSDCardImage.7z"
-		$garlicUpdateUri = "https://www.patreon.com/file?h=76561333&i=13249827" # This changes with each update, should take in as param or scrape
+		$garlicInstallZip = "RG35XX-MicroSDCardImage.7z"
 
 		# Cleanup/Create temp path for Garlic extraction
 		New-GpTemp -TempPath $TempPath -ClearTempPath $ClearTempPath -GarlicPath $garlicPath
@@ -64,7 +69,8 @@ function Install-GpGarlic {
 		# Download latest version
 		try {
 			if ($LocalFile -eq "") {
-				$garlicZipPath = Invoke-GpDownload -TempPath $TempPath -GarlicZip $garlicZip -GarlicUri $garlicUri
+				$garlicInstallUri = $GarlicURL
+				$garlicZipPath = Invoke-GpDownload -TempPath $TempPath -GarlicZip $garlicInstallZip -GarlicUri $garlicInstallUri
 			}
 			else {
 				$garlicZipPath = $LocalFile

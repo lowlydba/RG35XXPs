@@ -1,9 +1,17 @@
-﻿function Update-GpGarlic {
+﻿<#
+.PARAMETER GarlicURL
+    The URL of the GarlicOS update file (RG35XX-MicroSDCardImage.7z), ex: https://www.patreon.com/file?h=76561333&i=13249827
+	Note: With each new version of GarlicOS, old URLs become invalid. Ensure a valid one is being passed.
+
+#>
+function Update-GpGarlic {
 
 	[CmdletBinding()]
 	param (
-		[Parameter (Mandatory = $false)]
+		[Parameter (Mandatory = $true, ParameterSetName = "local")]
 		[string]$LocalFile,
+		[Parameter (Mandatory = $true, ParameterSetName = "remote")]
+		[string]$GarlicURL,
 		[Parameter (Mandatory = $false)]
 		[string]$TempPath = (Join-Path -Path ([System.IO.Path]::GetTempPath()) "\GarlicPs"),
 		[Parameter (Mandatory = $true)]
@@ -19,7 +27,7 @@
 		# Path to extract Garlic to
 		$garlicPath = Join-Path -Path $TempPath -ChildPath "\GarlicOSUpdate"
 		$garlicUpdateZip = "RG35XX-CopyPasteOnTopOfStock.7z"
-		$garlicUpdateUri = "https://www.patreon.com/file?h=76561333&i=13249818" # This changes with each update, should take in as param or scrape 
+
 
 		# Cleanup/Create temp path for Garlic extraction
 		New-GpTemp -TempPath $TempPath -ClearTempPath $ClearTempPath -GarlicPath $garlicPath
@@ -27,7 +35,8 @@
 		# Download latest version
 		try {
 			if ($LocalFile -eq "") {
-				$garlicZipPath = Invoke-GpDownload -TempPath $TempPath -GarlicZip $garlicZip -GarlicUri $garlicUri
+				$garlicUpdateUri = $GarlicURL
+				$garlicZipPath = Invoke-GpDownload -TempPath $TempPath -GarlicZip $garlicUpdateZip -GarlicUri $garlicUpdateUri
 			}
 			else {
 				$garlicZipPath = $LocalFile
@@ -65,8 +74,8 @@
 
 		# Copy personal files
 		Copy-GpPersonalFiles -BIOSPath $BIOSPath -ROMPath $ROMPath -Destination $TargetPath
-		
-	
+
+
 		catch {
 			Write-Error -Message "Error copying personal game files: $($_.Exception.Message)"
 		}
