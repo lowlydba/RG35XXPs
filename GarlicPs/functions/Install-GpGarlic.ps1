@@ -12,8 +12,9 @@ function Install-GpGarlic {
 .PARAMETER TempPath
     Optional. Where files will be downloaded and decompressed to during the installation.
 
-.PARAMETER TargetDrive
-    The target drive for the SD card. Must be the name returned from diskpart, i.e. '\\.\PhysicalDrive2'
+.PARAMETER TargetDevice
+    The target device of the SD card. 
+	Must be the DeviceID returned from 'GET-WMIOBJECT -Query "SELECT * FROM Win32_DiskDrive"'
 
 .PARAMETER ClearTempPath
     Optional. Whether to recursively empty the TempPath before using it. Recommended.
@@ -34,7 +35,7 @@ function Install-GpGarlic {
 		[Parameter (Mandatory = $false)]
 		[string]$TempPath = (Join-Path -Path ([System.IO.Path]::GetTempPath()) "\GarlicPs"),
 		[Parameter (Mandatory = $true)]
-		[string]$TargetDrive,
+		[string]$TargetDevice,
 		[Parameter (Mandatory = $false)]
 		[bool]$ClearTempPath = $false,
 		[Parameter (Mandatory = $false)]
@@ -82,7 +83,7 @@ function Install-GpGarlic {
 
         ## Step 2 - Flash garlic.img to SD
         $garlicImg = Join-Path -Path $garlicPath -ChildPath "garlic.img"
-        Invoke-Expression -Command 'balena local flash "$garlicImg" -y --drive $TargetDrive' 
+        Invoke-Expression -Command 'balena local flash "$garlicImg" -y --drive $TargetDevice' 
 
         ## Step 3 - Eject and re-insert SD
         Write-Output "Safely eject the SD card, then re-insert it."
