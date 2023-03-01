@@ -2,10 +2,10 @@ function Invoke-GpDownload {
 
     [CmdletBinding()]
     param (
-        [Parameter (Mandatory = $false)]
-        [string]$GarlicUri = "https://www.patreon.com/file?h=76561333&i=13218537",
-        [Parameter (Mandatory = $false)]
-        [string]$GarlicZip = "RG35XX-MicroSDCardImage.7z",
+        [Parameter (Mandatory = $true)]
+        [string]$GarlicUri,
+        [Parameter (Mandatory = $true)]
+        [string]$GarlicZip,
         [Parameter (Mandatory = $true)]
         [string]$TempPath
     )

@@ -17,15 +17,17 @@
 	)
 	process {
 		# Path to extract Garlic to
-		$garlicPath = Join-Path -Path $TempPath -ChildPath "\GarlicOS"
+		$garlicPath = Join-Path -Path $TempPath -ChildPath "\GarlicOSUpdate"
+		$garlicUpdateZip = "RG35XX-CopyPasteOnTopOfStock.7z"
+		$garlicUpdateUri = "https://www.patreon.com/file?h=76561333&i=13249818" # This changes with each update, should take in as param or scrape 
 
 		# Cleanup/Create temp path for Garlic extraction
-		Remove-GpTemp -TempPath $TempPath -ClearTempPath $ClearTempPath -GarlicPath $garlicPath
+		New-GpTemp -TempPath $TempPath -ClearTempPath $ClearTempPath -GarlicPath $garlicPath
 
 		# Download latest version
 		try {
 			if ($LocalFile -eq "") {
-				$garlicZipPath = Invoke-GpDownload -TempPath $TempPath
+				$garlicZipPath = Invoke-GpDownload -TempPath $TempPath -GarlicZip $garlicZip -GarlicUri $garlicUri
 			}
 			else {
 				$garlicZipPath = $LocalFile
@@ -62,24 +64,14 @@
 		}
 
 		# Copy personal files
-		try {
-			# BIOS files
-			if ($BIOSPath -ne "") {
-				# WIP
-				#Copy-Item -Path $BIOSPath -Destination $TargetPath -Recurse -Force -Confirm:$false
-			}
-			# ROM files
-			if ($ROMPath -ne "") {
-				# WIP
-				#Copy-Item -Path $ROMPath -Destination $TargetPath -Recurse -Force -Confirm:$false
-			}
-		}
+		Copy-GpPersonalFiles -BIOSPath $BIOSPath -ROMPath $ROMPath -Destination $TargetPath
+		
+	
 		catch {
 			Write-Error -Message "Error copying personal game files: $($_.Exception.Message)"
 		}
 
-		Write-Host "🧄  GarlicOS successfully installed!" -ForegroundColor DarkYellow
-		Write-Host "🙏  Thanks to Black Seraph for GarlicOS - https://www.patreon.com/bePatron?u=8770518" -ForegroundColor DarkMagenta
-		Write-Host "☕  Buy the author a coffee if you enjoy this project - https://www.buymeacoffee.com/johnmcc"-ForegroundColor Cyan
+		# Tada!
+		Invoke-GpThanks
 	}
 }

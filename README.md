@@ -17,7 +17,7 @@ Install-Module 7zip4powershell
 
 ### Other
 
-* [balena-cli][balena-cli] (command line version of balenaEtcher)
+* [balena-cli][balena-cli] (command line version of balenaEtcher) installed and added to PATH
 
 ## Contributing
 

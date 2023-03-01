@@ -24,7 +24,7 @@
 	RequiredModules = @(@{ ModuleName = '7Zip4PowerShell'; ModuleVersion = '2.0.0' })
 
 	# Functions to export from this module
-	FunctionsToExport = 'Update-GpGarlic'
+	FunctionsToExport = @('Update-GpGarlic', 'Install-GpGarlic')
 
 	# Cmdlets to export from this module
 	CmdletsToExport = ''
