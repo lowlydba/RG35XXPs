@@ -6,12 +6,18 @@ Only tested on Windows, YMMV.
 
 ## Requirements
 
+### PowerShell
+
 This module relies on [7zip4powershell][7z4p]. Why? Because GarlicOS is released in .7zip format.
 Before importing, ensure this module is present:
 
 ```pwsh
 Install-Module 7zip4powershell
 ```
+
+### Other
+
+* [balena-cli][balena-cli] (command line version of balenaEtcher)
 
 ## Contributing
 
@@ -28,5 +34,6 @@ Potential improvements:
 - Also support [MinUI](https://github.com/shauninman/union-minui/) install/update
 
 [7z4p]: https://www.powershellgallery.com/packages/7Zip4Powershell/
+[balena-cli]: https://github.com/balena-io/balena-cli/blob/master/INSTALL.md
 [garlic]: https://www.patreon.com/posts/garlicos-for-76561333
 [rg35xx]: https://anbernic.com/products/rg35xx
