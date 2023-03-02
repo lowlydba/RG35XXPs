@@ -84,12 +84,7 @@ function Update-GpGarlic {
 		}
 
 		# Extract the archive
-		try {
-			Expand-7Zip -ArchiveFileName $garlicZipPath -RootDrive $garlicPath
-		}
-		catch {
-			Write-Error -Message "Error extracting GarlicOS: $($_.Exception.Message)"
-		}
+		Expand-Gp7Zip -ArchivePath $garlicZipPath -TargetPath $garlicPath
 
 		## Update GarlicOS
 		try {

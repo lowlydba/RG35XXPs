@@ -90,12 +90,7 @@ function Install-GpGarlic {
 		}
 
 		# Extract the archive
-		try {
-			Expand-7Zip -ArchiveFileName $garlicZipPath -TargetPath $garlicPath
-		}
-		catch {
-			Write-Error -Message "Error extracting GarlicOS: $($_.Exception.Message)"
-		}
+		Expand-Gp7Zip -ArchivePath $garlicZipPath -TargetPath $garlicPath
 
 		## Step 2 - Flash garlic.img to SD
 		try {
