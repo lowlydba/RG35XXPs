@@ -12,6 +12,9 @@
     The URL of the GarlicOS update file (RG35XX-MicroSDCardImage.7z), ex: https://www.patreon.com/file?h=76561333&i=13249827
 	Note: With each new version of GarlicOS, old URLs become invalid. Ensure a valid one is being passed.
 
+.PARAMETER GarlicInstallZipName
+	When using GarlicURL, the name to save the downloaded file as in the TempPath.
+
 .PARAMETER TempPath
     Where files will be downloaded and decompressed to during the installation.
 
@@ -32,7 +35,7 @@
 	If exceeded, the ROM partition will be expanded to utilize the space.
 
 .EXAMPLE
-    Install-GpGarlic -GarlicUrl "https://www.patreon.com/file?h=76561333&i=13249827" -TargetDevice "\\.\PhysicalDevice2" -ClearTempPath $true
+    Install-GpGarlic -GarlicUrl "https://www.patreon.com/file?h=76561333&i=13249827" -TargetDiskNumber 2 -ClearTempPath $true
 #>
 function Install-GpGarlic {
 
@@ -54,8 +57,8 @@ function Install-GpGarlic {
 		[string]$BIOSPath,
 		[Parameter (Mandatory = $false)]
 		[string]$ROMPath,
+		[Parameter (Mandatory = $false)]
 		[string]$ExpandPartitionThreshold = "64MB"
-
 	)
 	process {
 		$garlicPath = Join-Path -Path $TempPath -ChildPath "\GarlicOS"
