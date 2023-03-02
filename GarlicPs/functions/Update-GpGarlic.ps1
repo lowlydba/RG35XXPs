@@ -1,9 +1,9 @@
 ﻿<#
 .SYNOPSIS
-    Install GarlicOS!
+    🧄 Update GarlicOS!
 
 .DESCRIPTION
-    Automate installation of GarlicOS.
+    Automate updates of GarlicOS.
 
 .PARAMETER LocalFile
     The full path of a copy of RG35XX-CopyPasteOnTopOfStock.7z locally available. If not supplied, it is downloaded.

@@ -1,6 +1,6 @@
 <#
 .SYNOPSIS
-    Install GarlicOS!
+    🧄 Install GarlicOS!
 
 .DESCRIPTION
     Automate installation of GarlicOS.
