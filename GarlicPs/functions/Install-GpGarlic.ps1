@@ -15,9 +15,8 @@
 .PARAMETER TempPath
     Where files will be downloaded and decompressed to during the installation.
 
-.PARAMETER TargetDevice
-    The target device of the SD card.
-	Must be the DeviceID returned from 'GET-WMIOBJECT -Query "SELECT * FROM Win32_DiskDrive"'
+.PARAMETER TargetDiskNumber
+    The index of the target SD card disk. Can be found using diskpart.exe
 
 .PARAMETER ClearTempPath
     Whether to recursively empty the TempPath before using it. Recommended.
@@ -27,6 +26,10 @@
 
 .PARAMETER ROMPath
     Path to personal ROM files that will be copied after installation.
+
+.PARAMETER ExpandPartitionThreshold
+	The threshold (in MB) of unallocated space on the target disk.
+	If exceeded, the ROM partition will be expanded to utilize the space.
 
 .EXAMPLE
     Install-GpGarlic -GarlicUrl "https://www.patreon.com/file?h=76561333&i=13249827" -TargetDevice "\\.\PhysicalDevice2" -ClearTempPath $true
@@ -39,28 +42,27 @@ function Install-GpGarlic {
 		[string]$LocalFile,
 		[Parameter (Mandatory = $true, ParameterSetName = "remote")]
 		[string]$GarlicURL,
+		[Parameter (Mandatory = $false, ParameterSetName = "remote")]
+		[string]$GarlicInstallZipName = "RG35XX-MicroSDCardImage.7z",
 		[Parameter (Mandatory = $false)]
 		[string]$TempPath = (Join-Path -Path ([System.IO.Path]::GetTempPath()) "\GarlicPs"),
 		[Parameter (Mandatory = $true)]
-		[string]$TargetDevice,
+		[int]$TargetDiskNumber,
 		[Parameter (Mandatory = $false)]
 		[bool]$ClearTempPath = $true,
 		[Parameter (Mandatory = $false)]
 		[string]$BIOSPath,
 		[Parameter (Mandatory = $false)]
-		[string]$ROMPath
+		[string]$ROMPath,
+		[string]$ExpandPartitionThreshold = "64MB"
+
 	)
 	process {
-		# Hacky check for balena cli
-		try {
-			Invoke-Expression "balena" | Out-Null
-		}
-		catch {
-			Write-Error -Message "balena cli not installed and/or not in PATH environment."
-		}
-
 		$garlicPath = Join-Path -Path $TempPath -ChildPath "\GarlicOS"
-		$garlicInstallZip = "RG35XX-MicroSDCardImage.7z"
+
+		# Get disk info
+		Write-Verbose -Message "Gathering info on disk #$TargetDiskNumber"
+		$targetDisk = GET-WMIOBJECT -Query "SELECT * FROM Win32_DiskDrive"
 
 		# Cleanup/Create temp path for Garlic extraction
 		New-GpTemp -TempPath $TempPath -ClearTempPath $ClearTempPath -GarlicPath $garlicPath
@@ -70,7 +72,7 @@ function Install-GpGarlic {
 		try {
 			if ($LocalFile -eq "") {
 				$garlicInstallUri = $GarlicURL
-				$garlicZipPath = Invoke-GpDownload -TempPath $TempPath -GarlicZip $garlicInstallZip -GarlicUri $garlicInstallUri
+				$garlicZipPath = Invoke-GpDownload -TempPath $TempPath -GarlicZip $GarlicInstallZipName -GarlicUri $garlicInstallUri
 			}
 			else {
 				$garlicZipPath = $LocalFile
@@ -90,14 +92,36 @@ function Install-GpGarlic {
 
 		## Step 2 - Flash garlic.img to SD
 		$garlicImg = Join-Path -Path $garlicPath -ChildPath "garlic.img"
-		Invoke-Expression -Command 'balena local flash "$garlicImg" -y --drive $TargetDevice'
+		Invoke-Expression -Command "balena local flash '$garlicImg' -y --drive $($targetDisk.Name)"
 
 		## Step 3 - Eject and re-insert SD
 		Write-Output "Safely eject the SD card, then re-insert it."
 		Read-Host "Press enter when done."
 
 		## Step 4 - Expand ROM partition
-		#TODO
+		# Calculate unallocated space
+		[int]$targetDiskSize = $targetDisk.Size
+		$targetDiskPartitions = GET-WMIOBJECT -Query "SELECT * FROM Win32_DiskPartition WHERE DiskIndex = $($targetDisk.Index)"
+		[int]$targetDiskUsedSpace = 0
+		foreach ($partition in $targetDiskPartitions) {
+			$targetDiskUsedSpace += $partition.Size
+		}
+		[int]$targetDiskFreeSpace = $targetDiskSize - $targetDiskUsedSpace
+		# If we have > $ExpandPartitionThreshold unallocated space, expand to use it
+		if ($targetDiskFreeSpace -gt $ExpandPartitionThreshold) {
+			$ROMPartition = $targetDiskPartitions | Where-Object { $_.Name -eq "ROM" } #TODO: Make this work
+			Write-Verbose -Message "Expanding ROM partition to max available size"
+			$diskPartScriptPath = Join-Path -Path $TempPath -ChildPath "GpdiskPart.txt"
+			#TODO: actually expand the partition
+			$diskpartScript = "
+			diskpart
+			list disk
+			select disk $($targetDisk.Index)
+			select partition $($ROMPartition.Index)
+			expand $targetDiskFreeSpace"
+			Set-Content -Value $diskpartScript -Path $diskPartScriptPath -Force
+			Invoke-Expression -Command "diskpart /s $diskPartScriptPath"
+		}
 
 		## Step 5 - Copy personal files
 		Copy-GpPersonalFiles -BIOSPath $BIOSPath -ROMPath $ROMPath -Destination #$TargetPath

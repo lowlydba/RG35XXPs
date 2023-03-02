@@ -12,6 +12,8 @@ function Update-GpGarlic {
 		[string]$LocalFile,
 		[Parameter (Mandatory = $true, ParameterSetName = "remote")]
 		[string]$GarlicURL,
+		[Parameter (Mandatory = $false, ParameterSetName = "remote")]
+		[string]$GarlicUpdateZipName = "RG35XX-CopyPasteOnTopOfStock.7z",
 		[Parameter (Mandatory = $false)]
 		[string]$TempPath = (Join-Path -Path ([System.IO.Path]::GetTempPath()) "\GarlicPs"),
 		[Parameter (Mandatory = $true)]
@@ -26,8 +28,6 @@ function Update-GpGarlic {
 	process {
 		# Path to extract Garlic to
 		$garlicPath = Join-Path -Path $TempPath -ChildPath "\GarlicOSUpdate"
-		$garlicUpdateZip = "RG35XX-CopyPasteOnTopOfStock.7z"
-
 
 		# Cleanup/Create temp path for Garlic extraction
 		New-GpTemp -TempPath $TempPath -ClearTempPath $ClearTempPath -GarlicPath $garlicPath
@@ -36,7 +36,7 @@ function Update-GpGarlic {
 		try {
 			if ($LocalFile -eq "") {
 				$garlicUpdateUri = $GarlicURL
-				$garlicZipPath = Invoke-GpDownload -TempPath $TempPath -GarlicZip $garlicUpdateZip -GarlicUri $garlicUpdateUri
+				$garlicZipPath = Invoke-GpDownload -TempPath $TempPath -GarlicZip $GarlicUpdateZipName -GarlicUri $garlicUpdateUri
 			}
 			else {
 				$garlicZipPath = $LocalFile
