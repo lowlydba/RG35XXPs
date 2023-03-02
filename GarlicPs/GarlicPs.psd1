@@ -21,7 +21,8 @@
 	PowerShellVersion = '5.0'
 
 	# Modules that must be imported into the global environment prior to importing this module
-	RequiredModules = @(@{ ModuleName = '7Zip4PowerShell'; ModuleVersion = '2.0.0' })
+	RequiredModules = @(@{ ModuleName = '7Zip4PowerShell'; ModuleVersion = '2.0.0' }
+		, @{ModuleName = 'Microsoft.PowerShell.Management'; ModuleVersion = '1.0.0' })
 
 	# Functions to export from this module
 	FunctionsToExport = @('Update-GpGarlic', 'Install-GpGarlic')

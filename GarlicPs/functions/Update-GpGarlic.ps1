@@ -1,8 +1,43 @@
 ﻿<#
+.SYNOPSIS
+    Install GarlicOS!
+
+.DESCRIPTION
+    Automate installation of GarlicOS.
+
+.PARAMETER LocalFile
+    The full path of a copy of RG35XX-CopyPasteOnTopOfStock.7z locally available. If not supplied, it is downloaded.
+
 .PARAMETER GarlicURL
-    The URL of the GarlicOS update file (RG35XX-MicroSDCardImage.7z), ex: https://www.patreon.com/file?h=76561333&i=13249827
+    The URL of the GarlicOS update file, ex: https://www.patreon.com/file?h=76561333&i=13249827
 	Note: With each new version of GarlicOS, old URLs become invalid. Ensure a valid one is being passed.
 
+.PARAMETER GarlicUpdateZipName
+	When using GarlicURL, the name to save the downloaded file as in the TempPath.
+
+.PARAMETER TempPath
+    Where files will be downloaded and decompressed to during the installation.
+
+.PARAMETER RootDrive
+    The root drive that contains the system files, nothing else. Ex: 'E:\'
+
+.PARAMETER ROMDrive
+	The drive that contains ROMs. Ex. 'G:\'
+
+.PARAMETER ClearTempPath
+    Whether to recursively empty the TempPath before using it. Recommended.
+
+.PARAMETER BIOSPath
+    Path to personal BIOS files that will be copied after installation.
+
+.PARAMETER ROMPath
+    Path to personal ROM files that will be copied after installation.
+
+.EXAMPLE
+    TBD
+
+.EXAMPLE
+	TBD
 #>
 function Update-GpGarlic {
 
@@ -17,7 +52,9 @@ function Update-GpGarlic {
 		[Parameter (Mandatory = $false)]
 		[string]$TempPath = (Join-Path -Path ([System.IO.Path]::GetTempPath()) "\GarlicPs"),
 		[Parameter (Mandatory = $true)]
-		[string]$TargetPath,
+		[string]$GarlicRootDrive,
+		[Parameter (Mandatory = $true)]
+		[string]$GarlicROMDrive,
 		[Parameter (Mandatory = $false)]
 		[bool]$ClearTempPath = $false,
 		[Parameter (Mandatory = $false)]
@@ -46,39 +83,34 @@ function Update-GpGarlic {
 			Write-Error -Message "Error downloading GarlicOS: $($_.Exception.Message)"
 		}
 
-		# Decompress the archive
+		# Extract the archive
 		try {
-			Expand-7Zip -ArchiveFileName $garlicZipPath -TargetPath $garlicPath
+			Expand-7Zip -ArchiveFileName $garlicZipPath -RootDrive $garlicPath
 		}
 		catch {
 			Write-Error -Message "Error extracting GarlicOS: $($_.Exception.Message)"
 		}
 
-		# Doesn't seem to be an easy way to parse the actual version of GarlicOS we have
-		# so for now it we'll just overwrite regardless.
-		# Would be nice to do a compare before proceeding though...
-
-		# Install GarlicOS
+		## Update GarlicOS
 		try {
-			# Copy Misc
-			$miscDir = "misc"
-			Copy-Item -Path (Join-Path -Path $garlicPath -ChildPath $miscDir) -Destination $TargetPath -Recurse -Force -Confirm:$false
+			# Misc / system files
+			$miscDir = "misc\*"
+			Copy-Item -Path (Join-Path -Path $GarlicRootDrive -ChildPath $miscDir) -Destination $GarlicRootDrive -Recurse -Force -Confirm:$false
 
-			# Copy ROMS
-			$romDir = "roms"
-			Copy-Item -Path (Join-Path -Path $garlicPath -ChildPath $romDir) -Destination $TargetPath -Recurse -Force -Confirm:$false
+			# CFW
+			$cfwDir = "roms\CFW\*"
+			Copy-Item -Path (Join-Path -Path $garlicPath -ChildPath $cfwDir) -Destination $GarlicROMDrive -Recurse -Force -Confirm:$false
+
+			# ROMS
+			$romDir = "roms\Roms\*"
+			Copy-Item -Path (Join-Path -Path $garlicPath -ChildPath $romDir) -Destination $GarlicROMDrive -Recurse -Force -Confirm:$false
 		}
 		catch {
 			Write-Error -Message "Error installing GarlicOS: $($_.Exception.Message)"
 		}
 
-		# Copy personal files
-		Copy-GpPersonalFiles -BIOSPath $BIOSPath -ROMPath $ROMPath -Destination $TargetPath
-
-
-		catch {
-			Write-Error -Message "Error copying personal game files: $($_.Exception.Message)"
-		}
+		## Copy personal files
+		Copy-GpPersonalFiles -BIOSPath $BIOSPath -ROMPath $ROMPath -Destination $GarlicRootDrive
 
 		# Tada!
 		Invoke-GpThanks

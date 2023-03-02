@@ -34,6 +34,7 @@ Potential improvements:
 * Handle USB Gamepad support enabling
 * Handle ADB support enabling
 * Also support [MinUI](https://github.com/shauninman/union-minui/) install/update
+* Use a progress bar
 
 [7z4p]: https://www.powershellgallery.com/packages/7Zip4Powershell/
 [balena-cli]: https://github.com/balena-io/balena-cli/blob/master/INSTALL.md

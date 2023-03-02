@@ -36,6 +36,16 @@
 
 .EXAMPLE
     Install-GpGarlic -GarlicUrl "https://www.patreon.com/file?h=76561333&i=13249827" -TargetDiskNumber 2 -ClearTempPath $true
+
+	Fetches GarlicOS from a Patreon attachment URL and installs it on an SD card identified as Disk #2.
+	Clears any files that may exist in the temp path.
+
+.EXAMPLE
+	Install-GpGarlic -LocalFile "C:\Users\lowlydba\Downloads\RG35XX-MicroSDCardImage.7z" -TargetDiskNumber 1 -ClearTempPath $true -TempPath "C:\temp"
+
+	Uses a local GarlicOS file and installs it on an SD card identified as Disk #1.
+	Stores temp files in C:\temp.
+	Clears any files that may already exist in C:\temp.
 #>
 function Install-GpGarlic {
 
@@ -65,27 +75,21 @@ function Install-GpGarlic {
 
 		# Get disk info
 		Write-Verbose -Message "Gathering info on disk #$TargetDiskNumber"
-		$targetDisk = GET-WMIOBJECT -Query "SELECT * FROM Win32_DiskDrive"
+		$targetDisk = Get-WmiObject -Query "SELECT * FROM Win32_DiskDrive"
 
 		# Cleanup/Create temp path for Garlic extraction
 		New-GpTemp -TempPath $TempPath -ClearTempPath $ClearTempPath -GarlicPath $garlicPath
 
 		## Step 1 - Download & extract GarlicOS
-		# Download latest version
-		try {
-			if ($LocalFile -eq "") {
-				$garlicInstallUri = $GarlicURL
-				$garlicZipPath = Invoke-GpDownload -TempPath $TempPath -GarlicZip $GarlicInstallZipName -GarlicUri $garlicInstallUri
-			}
-			else {
-				$garlicZipPath = $LocalFile
-			}
+		if ($LocalFile -eq "") {
+			$garlicInstallUri = $GarlicURL
+			$garlicZipPath = Invoke-GpDownload -TempPath $TempPath -GarlicZip $GarlicInstallZipName -GarlicUri $garlicInstallUri
 		}
-		catch {
-			Write-Error -Message "Error downloading GarlicOS: $($_.Exception.Message)"
+		else {
+			$garlicZipPath = $LocalFile
 		}
 
-		# Decompress the archive
+		# Extract the archive
 		try {
 			Expand-7Zip -ArchiveFileName $garlicZipPath -TargetPath $garlicPath
 		}
@@ -94,36 +98,57 @@ function Install-GpGarlic {
 		}
 
 		## Step 2 - Flash garlic.img to SD
-		$garlicImg = Join-Path -Path $garlicPath -ChildPath "garlic.img"
-		Invoke-Expression -Command "balena local flash '$garlicImg' -y --drive $($targetDisk.Name)"
+		try {
+			Write-Verbose -Message "Flashing Garlic image to disk #$TargetDiskNumber"
+			$garlicImg = Join-Path -Path $garlicPath -ChildPath "garlic.img"
+			Invoke-Expression -Command "balena local flash '$garlicImg' -y --drive $($targetDisk.Name)"
+		}
+		catch {
+			Write-Error -Message "Error flashing Garlic image to disk: $($_.Exception.Message)"
+		}
 
 		## Step 3 - Eject and re-insert SD
 		Write-Output "Safely eject the SD card, then re-insert it."
 		Read-Host "Press enter when done."
 
-		## Step 4 - Expand ROM partition
-		# Calculate unallocated space
-		[int]$targetDiskSize = $targetDisk.Size
-		$targetDiskPartitions = GET-WMIOBJECT -Query "SELECT * FROM Win32_DiskPartition WHERE DiskIndex = $($targetDisk.Index)"
-		[int]$targetDiskUsedSpace = 0
-		foreach ($partition in $targetDiskPartitions) {
-			$targetDiskUsedSpace += $partition.Size
+		## Step 4 - Expand ROM partition - Windows only currently
+		if ($IsWindows) {
+			# Calculate unallocated space
+			[int]$targetDiskSizeBytes = $targetDisk.Size
+			$targetDiskPartitions = GET-WMIOBJECT -Query "SELECT * FROM Win32_DiskPartition WHERE DiskIndex = $($targetDisk.Index)"
+			[int]$targetDiskUsedSpaceBytes = 0
+			foreach ($partition in $targetDiskPartitions) {
+				$targetDiskUsedSpaceBytes += $partition.Size
+			}
+			[int]$targetDiskFreeSpaceBytes = $targetDiskSizeBytes - $targetDiskUsedSpaceBytes
+			# If we have > $ExpandPartitionThreshold unallocated space, expand to use it
+			if ($targetDiskFreeSpaceBytes -gt $ExpandPartitionThreshold) {
+				try {
+					Write-Verbose -Message "Expanding ROM partition to max available size"
+					$ROMPartition = $targetDiskPartitions | Where-Object { $_.Name -eq "ROM" } #TODO: Make this work
+					$diskPartScriptPath = Join-Path -Path $TempPath -ChildPath "GpdiskPart.txt"
+					$newPartitionSizeBytes = $targetDiskFreeSpaceBytes + $ROMPartition.Size
+					$newPartitionSizeMb = ($newPartitionSizeBytes / 1MB)
+					# These are sloppy conversions, leave 10MB wiggle room to avoid issues
+					$newPartitionSizeMb -= 10
+					$diskpartScript = `
+						"diskpart
+						select disk $($targetDisk.Index)
+						select partition $($ROMPartition.Index)
+						extend size=$newPartitionSizeMb"
+					Set-Content -Value $diskpartScript -Path $diskPartScriptPath -Force
+					Invoke-Expression -Command "diskpart /s $diskPartScriptPath"
+				}
+				catch {
+					Write-Warning -Message "Error expanding ROM partition to utilize remaining disk space. Try manually. Error: $($_.Exception.Message)"
+				}
+			}
+			else {
+				Write-Verbose -Message "Less than $ExpandPartitionThreshold space left on the disk, skipping ROM partition expansion."
+			}
 		}
-		[int]$targetDiskFreeSpace = $targetDiskSize - $targetDiskUsedSpace
-		# If we have > $ExpandPartitionThreshold unallocated space, expand to use it
-		if ($targetDiskFreeSpace -gt $ExpandPartitionThreshold) {
-			$ROMPartition = $targetDiskPartitions | Where-Object { $_.Name -eq "ROM" } #TODO: Make this work
-			Write-Verbose -Message "Expanding ROM partition to max available size"
-			$diskPartScriptPath = Join-Path -Path $TempPath -ChildPath "GpdiskPart.txt"
-			#TODO: actually expand the partition
-			$diskpartScript = "
-			diskpart
-			list disk
-			select disk $($targetDisk.Index)
-			select partition $($ROMPartition.Index)
-			expand $targetDiskFreeSpace"
-			Set-Content -Value $diskpartScript -Path $diskPartScriptPath -Force
-			Invoke-Expression -Command "diskpart /s $diskPartScriptPath"
+		else {
+			Write-Warning -Message "ROM partition expansion is only supported on Windows currently."
 		}
 
 		## Step 5 - Copy personal files
