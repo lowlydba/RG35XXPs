@@ -3,7 +3,7 @@
 	RootModule = 'GarlicPs.psm1'
 
 	# Version number of this module.
-	ModuleVersion = '0.3.0'
+	ModuleVersion = '0.4.0'
 
 	# ID used to uniquely identify this module
 	GUID = 'd9f6a26f-ede0-4ab7-b894-482bfc9491c7'
