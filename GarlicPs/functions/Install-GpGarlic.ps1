@@ -18,8 +18,8 @@
 .PARAMETER TempPath
     Where files will be downloaded and decompressed to during the installation.
 
-.PARAMETER TargetDiskNumber
-    The index of the target SD card disk. Can be found using diskpart.exe
+.PARAMETER TargetDeviceNumber
+    The index of the target SD card device. Can be found using diskpart.exe or equivalent.
 
 .PARAMETER ClearTempPath
     Whether to recursively empty the TempPath before using it. Recommended.
@@ -30,23 +30,24 @@
 .PARAMETER ROMPath
     Path to personal ROM files that will be copied after installation.
 
-.PARAMETER ExpandPartitionThreshold
-	The threshold (in MB) of unallocated space on the target disk.
+.PARAMETER ExpandPartitionThresholdMb
+	The threshold in MB of unallocated space on the target disk.
 	If exceeded, the ROM partition will be expanded to utilize the space.
 
 .EXAMPLE
-    Install-GpGarlic -GarlicUrl "https://www.patreon.com/file?h=76561333&i=13249827" -TargetDiskNumber 2 -ClearTempPath $true
+    Install-GpGarlic -GarlicUrl "https://www.patreon.com/file?h=76561333&i=13249827" -TargetDeviceNumber 2 -ClearTempPath $true
 
 	Fetches GarlicOS from a Patreon attachment URL and installs it on an SD card identified as Disk #2.
 	Clears any files that may exist in the temp path.
 
 .EXAMPLE
-	Install-GpGarlic -LocalFile "C:\Users\lowlydba\Downloads\RG35XX-MicroSDCardImage.7z" -TargetDiskNumber 1 -ClearTempPath $true -TempPath "C:\temp"
+	Install-GpGarlic -LocalFile "C:\Users\lowlydba\Downloads\RG35XX-MicroSDCardImage.7z" -TargetDeviceNumber 1 -ClearTempPath $true -TempPath "C:\temp"
 
 	Uses a local GarlicOS file and installs it on an SD card identified as Disk #1.
 	Stores temp files in C:\temp.
 	Clears any files that may already exist in C:\temp.
 #>
+#Requires -RunAsAdministrator
 function Install-GpGarlic {
 
 	[CmdletBinding()]
@@ -60,7 +61,8 @@ function Install-GpGarlic {
 		[Parameter (Mandatory = $false)]
 		[string]$TempPath = (Join-Path -Path ([System.IO.Path]::GetTempPath()) "\GarlicPs"),
 		[Parameter (Mandatory = $true)]
-		[int]$TargetDiskNumber,
+		[ValidateRange(1, 99)]
+		[int]$TargetDeviceNumber,
 		[Parameter (Mandatory = $false)]
 		[bool]$ClearTempPath = $true,
 		[Parameter (Mandatory = $false)]
@@ -68,14 +70,14 @@ function Install-GpGarlic {
 		[Parameter (Mandatory = $false)]
 		[string]$ROMPath,
 		[Parameter (Mandatory = $false)]
-		[string]$ExpandPartitionThreshold = "64MB"
+		[string]$ExpandPartitionThresholdMb = "64MB"
 	)
 	process {
 		$garlicPath = Join-Path -Path $TempPath -ChildPath "\GarlicOS"
 
-		# Get disk info
-		Write-Verbose -Message "Gathering info on disk #$TargetDiskNumber"
-		$targetDisk = Get-WmiObject -Query "SELECT * FROM Win32_DiskDrive"
+		## Get disk info
+		# Balena is case sensitive, so get the deviceId from its util to avoid issues
+		$targetBalenaDrive = Get-GpBalenaDrive -TargetDeviceNumber $TargetDeviceNumber
 
 		# Cleanup/Create temp path for Garlic extraction
 		New-GpTemp -TempPath $TempPath -ClearTempPath $ClearTempPath -GarlicPath $garlicPath
@@ -93,31 +95,27 @@ function Install-GpGarlic {
 		Expand-Gp7Zip -ArchivePath $garlicZipPath -TargetPath $garlicPath
 
 		## Step 2 - Flash garlic.img to SD
-		try {
-			Write-Verbose -Message "Flashing Garlic image to disk #$TargetDiskNumber"
-			$garlicImg = Join-Path -Path $garlicPath -ChildPath "garlic.img"
-			Invoke-Expression -Command "balena local flash '$garlicImg' -y --drive $($targetDisk.Name)"
-		}
-		catch {
-			Write-Error -Message "Error flashing Garlic image to disk: $($_.Exception.Message)"
-		}
+		$garlicImgPath = Join-Path -Path $garlicPath -ChildPath "garlic.img"
+		Invoke-GpBalenaFlash -ImgPath $garlicImgPath -TargetDrive $targetBalenaDrive
 
 		## Step 3 - Eject and re-insert SD
+		Write-Output ""
 		Write-Output "Safely eject the SD card, then re-insert it."
-		Read-Host "Press enter when done."
+		Read-Host "Press enter to continue"
 
 		## Step 4 - Expand ROM partition - Windows only currently
 		if ($IsWindows) {
+			$targetDisk = Get-WmiObject -Query "SELECT * FROM Win32_DiskDrive WHERE Index = $TargetDeviceNumber"
+			$targetDiskPartitions = Get-WmiObject -Query "SELECT * FROM Win32_DiskPartition WHERE DiskIndex = $($targetDisk.Index)"
 			# Calculate unallocated space
-			[int]$targetDiskSizeBytes = $targetDisk.Size
-			$targetDiskPartitions = GET-WMIOBJECT -Query "SELECT * FROM Win32_DiskPartition WHERE DiskIndex = $($targetDisk.Index)"
-			[int]$targetDiskUsedSpaceBytes = 0
+			[long]$targetDiskSizeBytes = $targetDisk.Size
+			[long]$targetDiskUsedSpaceBytes = 0
 			foreach ($partition in $targetDiskPartitions) {
 				$targetDiskUsedSpaceBytes += $partition.Size
 			}
-			[int]$targetDiskFreeSpaceBytes = $targetDiskSizeBytes - $targetDiskUsedSpaceBytes
-			# If we have > $ExpandPartitionThreshold unallocated space, expand to use it
-			if ($targetDiskFreeSpaceBytes -gt $ExpandPartitionThreshold) {
+			[long]$targetDiskFreeSpaceBytes = $targetDiskSizeBytes - $targetDiskUsedSpaceBytes
+			# If we have > $ExpandPartitionThresholdMb unallocated space, expand to use it
+			if ($targetDiskFreeSpaceBytes -gt $ExpandPartitionThresholdMb) {
 				try {
 					Write-Verbose -Message "Expanding ROM partition to max available size"
 					$ROMPartition = $targetDiskPartitions | Where-Object { $_.Name -eq "ROM" } #TODO: Make this work
@@ -139,7 +137,7 @@ function Install-GpGarlic {
 				}
 			}
 			else {
-				Write-Verbose -Message "Less than $ExpandPartitionThreshold space left on the disk, skipping ROM partition expansion."
+				Write-Verbose -Message "Less than $ExpandPartitionThresholdMb space left on the disk, skipping ROM partition expansion."
 			}
 		}
 		else {

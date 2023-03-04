@@ -13,8 +13,8 @@ function Invoke-GpDownload {
         try {
             $garlicZipPath = Join-Path -Path $TempPath -ChildPath $garlicZip
 
-            Write-Verbose -Message "Getting latest version from $garlicUri"
-            Invoke-WebRequest -Uri $garlicUri -OutFile $garlicZipPath -ContentType "application/x-7z-compressed"
+            Write-Verbose -Message "Downloading from '$garlicUri'"
+            Invoke-WebRequest -Uri $garlicUri -OutFile $garlicZipPath -ContentType "application/x-7z-compressed" -Verbose:$false
             Write-Verbose -Message "GarlicOS saved to $garlicZipPath"
 
             return $garlicZipPath

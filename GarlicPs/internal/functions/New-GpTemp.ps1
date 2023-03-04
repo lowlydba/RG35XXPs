@@ -1,4 +1,4 @@
-function Remove-GpTemp {
+function New-GpTemp {
 
     [CmdletBinding()]
     param (
@@ -12,7 +12,7 @@ function Remove-GpTemp {
     process {
         if ((Test-Path -Path $TempPath) -and (Get-ChildItem -Path $TempPath)) {
             if ($ClearTempPath -eq $true) {
-                Write-Verbose -Message "Clearing existing temp dir $TempPath"
+                Write-Verbose -Message "Clearing existing temp dir '$TempPath'"
                 Remove-Item -Path $TempPath -Recurse -Force
                 New-Item -Path $TempPath -ItemType Directory | Out-Null
                 New-Item -Path $GarlicPath -ItemType Directory | Out-Null

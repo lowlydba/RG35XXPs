@@ -51,9 +51,11 @@ function Update-GpGarlic {
 		[string]$GarlicUpdateZipName = "RG35XX-CopyPasteOnTopOfStock.7z",
 		[Parameter (Mandatory = $false)]
 		[string]$TempPath = (Join-Path -Path ([System.IO.Path]::GetTempPath()) "\GarlicPs"),
+		[ValidateScript({ $_ -notlike "C:*" })]
 		[Parameter (Mandatory = $true)]
 		[string]$GarlicRootDrive,
 		[Parameter (Mandatory = $true)]
+		[ValidateScript({ $_ -notlike "C:*" })]
 		[string]$GarlicROMDrive,
 		[Parameter (Mandatory = $false)]
 		[bool]$ClearTempPath = $false,
