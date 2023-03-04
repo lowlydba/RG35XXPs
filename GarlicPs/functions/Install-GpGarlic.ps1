@@ -19,7 +19,7 @@
     Where files will be downloaded and decompressed to during the installation.
 
 .PARAMETER TargetDeviceNumber
-    The index of the target SD card device. Can be found using diskpart.exe or equivalent.
+    The index of the target boot SD card device. Can be found using diskpart.exe or equivalent.
 
 .PARAMETER ClearTempPath
     Whether to recursively empty the TempPath before using it. Recommended.
@@ -36,7 +36,11 @@
 
 .PARAMETER ROMDriveLetter
 	If the ROM partition does not get assigned a drive letter on re-insert, assign it this one
-	to make it accessible.
+	to make it accessible. If drive letter is already assigned, this value is ignored.
+
+.PARAMETER 2ndSDDrive
+	If using two SD cards, the drive letter of the FAT32 formatted drive for ROMs and BIOS files.
+	Must be in a valid path format, i.e. 'X:\'
 
 .EXAMPLE
     Install-GpGarlic -GarlicUrl "https://www.patreon.com/file?h=76561333&i=13249827" -TargetDeviceNumber 2 -ClearTempPath $true
@@ -73,9 +77,10 @@ function Install-GpGarlic {
 		[Parameter (Mandatory = $false)]
 		[string]$ROMPath,
 		[Parameter (Mandatory = $false)]
-		[string]$ExpandPartitionThresholdMb = "64MB",
+		[string]$ROMDriveLetter = "R",
 		[Parameter (Mandatory = $false)]
-		[string]$ROMDriveLetter = "R"
+		[ValidateScript({ Test-Path -Path $_ })]
+		[string]$2ndSDDrive
 	)
 	process {
 		$garlicPath = Join-Path -Path $TempPath -ChildPath "\GarlicOS"
@@ -111,63 +116,31 @@ function Install-GpGarlic {
 		Read-Host "Press enter to continue"
 
 		## Step 4 - Configure FAT32 partition if needed, doesn't always auto-assign drive
-		if ($isWindows) {
-			$targetDisk = Get-WmiObject -Query "SELECT * FROM Win32_DiskDrive WHERE Index = $TargetDeviceNumber"
-			$targetDiskPartitions = Get-WmiObject -Query "SELECT * FROM Win32_DiskPartition WHERE DiskIndex = $($targetDisk.Index)"
-			$ROMPartition = $targetDiskPartitions[-1] # Feels hacky, maybe a better way to identify other than its index as last partition?
-			$ROMPartitionNumber = $ROMPartition.Index + 1 # Most partition use is 1-based, but the above returns 0-based indexing
-			$ROMDrive = (Get-Partition -DiskNumber $targetDisk.Index -PartitionNumber $ROMPartitionNumber).DriveLetter
-			if ($null -eq $ROMDrive) {
-				# Assign drive letter to ROM partition
-				Write-Verbose -Message "Setting #$($targetDisk.Index), partition #$ROMPartitionNumber to drive letter '$ROMDriveLetter'."
-				Set-Partition -DiskNumber $targetDisk.Index -PartitionNumber $ROMPartitionNumber -NewDriveLetter $ROMDriveLetter
-			}
-			else {
-				Write-Verbose -Message "Found ROM partition as drive '$ROMDrive'"
-			}
-		}
-
-		## Step 5 - Expand ROM partition - Windows only currently
-		# WIP - Need to copy files out of ROM Partition, drop partition, create new partition up to 32GB
-		# and then re-copy the files back over. Not sure if this is worth it since builtin Windows options
-		# can't create FAT32 > 32GB. Might make more sense to leave this as a manual step if desired.
-		if ($IsWindows -and (1 -eq 0)) {
-			# Calculate unallocated space
-			[long]$targetDiskSizeBytes = $targetDisk.Size
-			[long]$targetDiskUsedSpaceBytes = 0
-			foreach ($partition in $targetDiskPartitions) {
-				$targetDiskUsedSpaceBytes += $partition.Size
-			}
-			[long]$targetDiskFreeSpaceBytes = $targetDiskSizeBytes - $targetDiskUsedSpaceBytes
-			# If we have > $ExpandPartitionThresholdMb unallocated space, expand to use it
-			if ($targetDiskFreeSpaceBytes -gt $ExpandPartitionThresholdMb) {
-				try {
-					Write-Verbose -Message "Expanding ROM partition to max available size"
-					$diskPartScriptPath = Join-Path -Path $TempPath -ChildPath "GpdiskPart.txt"
-					$newPartitionSizeBytes = $targetDiskFreeSpaceBytes + $ROMPartition.Size
-					$newPartitionSizeMb = ($newPartitionSizeBytes / 1MB)
-					# These are sloppy conversions, leave 10MB wiggle room to avoid issues
-					$newPartitionSizeMb -= 10
-					$newPartitionSizeMb = ([Math]::Round($newPartitionSizeMb, 0))
-					$diskpartScript = `
-						"TBD"
-					Set-Content -Value $diskpartScript -Path $diskPartScriptPath -Force
-					Invoke-Expression -Command "diskpart /s $diskPartScriptPath" -ErrorAction 'Stop'
-				}
-				catch {
-					Write-Warning -Message "Error expanding ROM partition to utilize remaining disk space. Try manually. Error: $($_.Exception.Message)"
-				}
-			}
-			else {
-				Write-Verbose -Message "Less than $ExpandPartitionThresholdMb space left on the disk, skipping ROM partition expansion."
-			}
+		$targetDisk = Get-Disk -DiskNumber $TargetDeviceNumber
+		$targetDiskPartitions = Get-Partition -DiskNumber $TargetDeviceNumber
+		$ROMPartition = $targetDiskPartitions[-1] # Feels hacky, maybe a better way to identify other than its index as last partition?
+		$ROMPartitionNumber = $ROMPartition.Index + 1 # Most partition use is 1-based, but the above returns 0-based indexing
+		$ROMDrive = (Get-Partition -DiskNumber $targetDisk.Index -PartitionNumber $ROMPartitionNumber).DriveLetter
+		if ($null -eq $ROMDrive) {
+			# Assign drive letter to ROM partition
+			Write-Verbose -Message "Setting #$($targetDisk.Index), partition #$ROMPartitionNumber to drive letter '$ROMDriveLetter'."
+			Set-Partition -DiskNumber $targetDisk.Index -PartitionNumber $ROMPartitionNumber -NewDriveLetter $ROMDriveLetter
 		}
 		else {
-			Write-Warning -Message "ROM partition expansion is not supported currently."
+			Write-Verbose -Message "Found ROM partition as drive '$ROMDrive'"
+		}
+
+		## Step 5 - Copy ROM & BIOS data to 2nd SD Card
+		$ROMDrivePath = $ROMDrive + ':\'
+		if ($2ndSDDrive -ne '') {
+			Write-Verbose -Message "Copying ROM and BIOS data from '$ROMDrivePath' to '$2ndSDDrive'"
+			$GarlicROMPath = Join-Path -Path $ROMDrivePath -ChildPath "Roms"
+			$GarlicBIOSPath = Join-Path -Path $ROMDrivePath -ChildPath "BIOS"
+			Copy-GpGarlicFiles -BIOSPath $GarlicBIOSPath -ROMPath $GarlicROMPath -Destination $2ndSDDrive
 		}
 
 		## Step 6 - Copy personal files
-		Copy-GpPersonalFiles -BIOSPath $BIOSPath -ROMPath $ROMPath -Destination ($ROMDrive + ":\")
+		Copy-GpPersonalFiles -BIOSPath $BIOSPath -ROMPath $ROMPath -Destination $ROMDrivePath
 
 		## Tada!
 		Invoke-GpThanks

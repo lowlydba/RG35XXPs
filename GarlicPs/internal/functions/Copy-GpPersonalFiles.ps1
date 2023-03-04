@@ -12,12 +12,12 @@ function Copy-GpPersonalFiles {
         try {
             if ($BIOSPath -ne "") {
                 $BIOSDestinationPath = Join-Path -Path $Destination -ChildPath "BIOS"
-                Write-Verbose -Message "Copying BIOS files from '$BIOSPath' to '$BIOSDestinationPath'"
+                Write-Verbose -Message "Copying personal BIOS files from '$BIOSPath' to '$BIOSDestinationPath'"
                 Copy-Item -Path $BIOSPath -Destination $BIOSDestinationPath -Recurse -Force -Confirm:$false
             }
             if ($ROMPath -ne "") {
                 $ROMDestinationPath = Join-Path -Path $Destination -ChildPath "Roms"
-                Write-Verbose -Message "Copying ROM files from '$ROMPath' to '$ROMDestinationPath'"
+                Write-Verbose -Message "Copying personal ROM files from '$ROMPath' to '$ROMDestinationPath'"
                 Copy-Item -Path $ROMPath -Destination $ROMDestinationPath -Recurse -Force -Confirm:$false
             }
         }
