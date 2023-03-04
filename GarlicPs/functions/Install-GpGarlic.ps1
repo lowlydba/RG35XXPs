@@ -115,11 +115,10 @@ function Install-GpGarlic {
 			$targetDisk = Get-WmiObject -Query "SELECT * FROM Win32_DiskDrive WHERE Index = $TargetDeviceNumber"
 			$targetDiskPartitions = Get-WmiObject -Query "SELECT * FROM Win32_DiskPartition WHERE DiskIndex = $($targetDisk.Index)"
 			$ROMPartition = $targetDiskPartitions[-1] # Feels hacky, maybe a better way to identify other than its index as last partition?
-			$ROMPartitionNumber = $ROMPartition.Index + 1 # Most partition use is 1-based, but the above uses 0-based indexing
+			$ROMPartitionNumber = $ROMPartition.Index + 1 # Most partition use is 1-based, but the above returns 0-based indexing
 			$ROMDrive = (Get-Partition -DiskNumber $targetDisk.Index -PartitionNumber $ROMPartitionNumber).DriveLetter
 			if ($null -eq $ROMDrive) {
 				# Assign drive letter to ROM partition
-
 				Write-Verbose -Message "Setting #$($targetDisk.Index), partition #$ROMPartitionNumber to drive letter '$ROMDriveLetter'."
 				Set-Partition -DiskNumber $targetDisk.Index -PartitionNumber $ROMPartitionNumber -NewDriveLetter $ROMDriveLetter
 			}
