@@ -19,7 +19,9 @@ Contributions are welcome! Please adhere to the linting rules and try to follow 
 
 ## Limitations
 
-Right now re/sizing FAT32 volumes on Windows > 32GB isn't doable without third party tools.
+### Resizing Partitions
+
+Right now re/sizing FAT32 volumes (i.e. the ROMS partition) on Windows > 32GB isn't doable without third party tools.
 I haven't been able to find a reliable CLI tool to do this, but please open an enhancement request if you know of one.
 
 In the mean time, you can add a 👍🏻 emoji to the [request][balena-request] to include this capability
