@@ -48,12 +48,14 @@
 	Fetches GarlicOS from a Patreon attachment URL and installs it on an SD card identified as Disk #2.
 	Clears any files that may exist in the temp path.
 
+
 .EXAMPLE
 	Install-GpGarlic -LocalFile "C:\Users\lowlydba\Downloads\RG35XX-MicroSDCardImage.7z" -TargetDeviceNumber 1 -ClearTempPath $true -TempPath "C:\temp"
 
 	Uses a local GarlicOS file and installs it on an SD card identified as Disk #1.
 	Stores temp files in C:\temp.
 	Clears any files that may already exist in C:\temp.
+
 #>
 #Requires -RunAsAdministrator
 function Install-GpGarlic {
@@ -120,18 +122,18 @@ function Install-GpGarlic {
 		$targetDiskPartitions = Get-Partition -DiskNumber $TargetDeviceNumber
 		$ROMPartition = $targetDiskPartitions[-1] # Feels hacky, maybe a better way to identify other than its index as last partition?
 		$ROMPartitionNumber = $ROMPartition.Index + 1 # Most partition use is 1-based, but the above returns 0-based indexing
-		$ROMDrive = (Get-Partition -DiskNumber $targetDisk.Index -PartitionNumber $ROMPartitionNumber).DriveLetter
-		if ($null -eq $ROMDrive) {
+		$ROMDriveLetter = (Get-Partition -DiskNumber $targetDisk.Index -PartitionNumber $ROMPartitionNumber).DriveLetter
+		$ROMDrivePath = $ROMDriveLetter + ':\'
+		if ($null -eq $ROMDriveLetter) {
 			# Assign drive letter to ROM partition
 			Write-Verbose -Message "Setting #$($targetDisk.Index), partition #$ROMPartitionNumber to drive letter '$ROMDriveLetter'."
 			Set-Partition -DiskNumber $targetDisk.Index -PartitionNumber $ROMPartitionNumber -NewDriveLetter $ROMDriveLetter
 		}
 		else {
-			Write-Verbose -Message "Found ROM partition as drive '$ROMDrive'"
+			Write-Verbose -Message "Found ROM partition as drive '$ROMDriveLetter'"
 		}
 
 		## Step 5 - Copy ROM & BIOS data to 2nd SD Card
-		$ROMDrivePath = $ROMDrive + ':\'
 		if ($2ndSDDrive -ne '') {
 			Write-Verbose -Message "Copying ROM and BIOS data from '$ROMDrivePath' to '$2ndSDDrive'"
 			$GarlicROMPath = Join-Path -Path $ROMDrivePath -ChildPath "Roms"

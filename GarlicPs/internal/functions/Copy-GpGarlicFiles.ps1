@@ -22,6 +22,6 @@ function Copy-GpGarlicFiles {
         }
     }
     catch {
-        Write-Error -Message "Error installing GarlicOS: $($_.Exception.Message)"
+        Write-Error -Message "Error copying GarlicOS files: $($_.Exception.Message)"
     }
 }
