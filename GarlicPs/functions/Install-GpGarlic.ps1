@@ -34,6 +34,10 @@
 	The threshold in MB of unallocated space on the target disk.
 	If exceeded, the ROM partition will be expanded to utilize the space.
 
+.PARAMETER ROMDriveLetter
+	If the ROM partition does not get assigned a drive letter on re-insert, assign it this one
+	to make it accessible.
+
 .EXAMPLE
     Install-GpGarlic -GarlicUrl "https://www.patreon.com/file?h=76561333&i=13249827" -TargetDeviceNumber 2 -ClearTempPath $true
 
@@ -49,8 +53,7 @@
 #>
 #Requires -RunAsAdministrator
 function Install-GpGarlic {
-
-	[CmdletBinding()]
+	[CmdletBinding(SupportsShouldProcess, ConfirmImpact = 'Medium')]
 	param (
 		[Parameter (Mandatory = $true, ParameterSetName = "local")]
 		[string]$LocalFile,
@@ -70,7 +73,9 @@ function Install-GpGarlic {
 		[Parameter (Mandatory = $false)]
 		[string]$ROMPath,
 		[Parameter (Mandatory = $false)]
-		[string]$ExpandPartitionThresholdMb = "64MB"
+		[string]$ExpandPartitionThresholdMb = "64MB",
+		[Parameter (Mandatory = $false)]
+		[string]$ROMDriveLetter = "R"
 	)
 	process {
 		$garlicPath = Join-Path -Path $TempPath -ChildPath "\GarlicOS"
@@ -96,17 +101,38 @@ function Install-GpGarlic {
 
 		## Step 2 - Flash garlic.img to SD
 		$garlicImgPath = Join-Path -Path $garlicPath -ChildPath "garlic.img"
-		Invoke-GpBalenaFlash -ImgPath $garlicImgPath -TargetDrive $targetBalenaDrive
+		if ($PSCmdlet.ShouldContinue($targetBalenaDrive, " Flash device with GarlicOS image? This will format and erase any existing data on the device.")) {
+			Invoke-GpBalenaFlash -ImgPath $garlicImgPath -TargetDrive $targetBalenaDrive
+		}
 
 		## Step 3 - Eject and re-insert SD
 		Write-Output ""
 		Write-Output "Safely eject the SD card, then re-insert it."
 		Read-Host "Press enter to continue"
 
-		## Step 4 - Expand ROM partition - Windows only currently
-		if ($IsWindows) {
+		## Step 4 - Configure FAT32 partition if needed, doesn't always auto-assign drive
+		if ($isWindows) {
 			$targetDisk = Get-WmiObject -Query "SELECT * FROM Win32_DiskDrive WHERE Index = $TargetDeviceNumber"
 			$targetDiskPartitions = Get-WmiObject -Query "SELECT * FROM Win32_DiskPartition WHERE DiskIndex = $($targetDisk.Index)"
+			$ROMPartition = $targetDiskPartitions[-1] # Feels hacky, maybe a better way to identify other than its index as last partition?
+			$ROMPartitionNumber = $ROMPartition.Index + 1 # Most partition use is 1-based, but the above uses 0-based indexing
+			$ROMDrive = (Get-Partition -DiskNumber $targetDisk.Index -PartitionNumber $ROMPartitionNumber).DriveLetter
+			if ($null -eq $ROMDrive) {
+				# Assign drive letter to ROM partition
+
+				Write-Verbose -Message "Setting #$($targetDisk.Index), partition #$ROMPartitionNumber to drive letter '$ROMDriveLetter'."
+				Set-Partition -DiskNumber $targetDisk.Index -PartitionNumber $ROMPartitionNumber -NewDriveLetter $ROMDriveLetter
+			}
+			else {
+				Write-Verbose -Message "Found ROM partition as drive '$ROMDrive'"
+			}
+		}
+
+		## Step 5 - Expand ROM partition - Windows only currently
+		# WIP - Need to copy files out of ROM Partition, drop partition, create new partition up to 32GB
+		# and then re-copy the files back over. Not sure if this is worth it since builtin Windows options
+		# can't create FAT32 > 32GB. Might make more sense to leave this as a manual step if desired.
+		if ($IsWindows -and (1 -eq 0)) {
 			# Calculate unallocated space
 			[long]$targetDiskSizeBytes = $targetDisk.Size
 			[long]$targetDiskUsedSpaceBytes = 0
@@ -118,19 +144,16 @@ function Install-GpGarlic {
 			if ($targetDiskFreeSpaceBytes -gt $ExpandPartitionThresholdMb) {
 				try {
 					Write-Verbose -Message "Expanding ROM partition to max available size"
-					$ROMPartition = $targetDiskPartitions | Where-Object { $_.Name -eq "ROM" } #TODO: Make this work
 					$diskPartScriptPath = Join-Path -Path $TempPath -ChildPath "GpdiskPart.txt"
 					$newPartitionSizeBytes = $targetDiskFreeSpaceBytes + $ROMPartition.Size
 					$newPartitionSizeMb = ($newPartitionSizeBytes / 1MB)
 					# These are sloppy conversions, leave 10MB wiggle room to avoid issues
 					$newPartitionSizeMb -= 10
+					$newPartitionSizeMb = ([Math]::Round($newPartitionSizeMb, 0))
 					$diskpartScript = `
-						"diskpart
-						select disk $($targetDisk.Index)
-						select partition $($ROMPartition.Index)
-						extend size=$newPartitionSizeMb"
+						"TBD"
 					Set-Content -Value $diskpartScript -Path $diskPartScriptPath -Force
-					Invoke-Expression -Command "diskpart /s $diskPartScriptPath"
+					Invoke-Expression -Command "diskpart /s $diskPartScriptPath" -ErrorAction 'Stop'
 				}
 				catch {
 					Write-Warning -Message "Error expanding ROM partition to utilize remaining disk space. Try manually. Error: $($_.Exception.Message)"
@@ -141,11 +164,11 @@ function Install-GpGarlic {
 			}
 		}
 		else {
-			Write-Warning -Message "ROM partition expansion is only supported on Windows currently."
+			Write-Warning -Message "ROM partition expansion is not supported currently."
 		}
 
-		## Step 5 - Copy personal files
-		Copy-GpPersonalFiles -BIOSPath $BIOSPath -ROMPath $ROMPath -Destination #$TargetPath
+		## Step 6 - Copy personal files
+		Copy-GpPersonalFiles -BIOSPath $BIOSPath -ROMPath $ROMPath -Destination ($ROMDrive + ":\")
 
 		## Tada!
 		Invoke-GpThanks

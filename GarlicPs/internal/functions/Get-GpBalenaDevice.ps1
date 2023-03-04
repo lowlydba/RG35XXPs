@@ -22,7 +22,7 @@ function Get-GpBalenaDrive {
         }
     }
     if ($TargetDeviceId) {
-        Write-Verbose -Message "Found device '$TargetDeviceId' for balena cli"
+        Write-Verbose -Message "Found device '$TargetDeviceId'"
         return $TargetDeviceId
     }
     else {

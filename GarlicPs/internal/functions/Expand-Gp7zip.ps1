@@ -7,7 +7,7 @@ function Expand-Gp7zip {
         [string]$TargetPath
     )
     try {
-        Write-Verbose -Message "Expanding $ArchivePath to $TargetPath"
+        Write-Verbose -Message "Expanding '$ArchivePath' to '$TargetPath'"
         Invoke-Expression -Command "7z e $ArchivePath -o'$TargetPath'"
     }
     catch {
