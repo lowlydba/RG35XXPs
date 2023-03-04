@@ -91,15 +91,17 @@ function Update-GpGarlic {
 		## Update GarlicOS
 		try {
 			# Misc / system files
-			$miscDir = "misc\*"
+			$miscDir = Join-Path -Path "misc" -ChildPath "*"
 			Copy-Item -Path (Join-Path -Path $GarlicRootDrive -ChildPath $miscDir) -Destination $GarlicRootDrive -Recurse -Force -Confirm:$false
 
 			# CFW
-			$cfwDir = "roms\CFW\*"
+			$cfwDir = Join-Path -Path "roms" -ChildPath "CFW"
+			$cfwDir = Join-Path -Path $cfwDir -ChildPath "*"
 			Copy-Item -Path (Join-Path -Path $garlicPath -ChildPath $cfwDir) -Destination $GarlicROMDrive -Recurse -Force -Confirm:$false
 
 			# ROMS
-			$romDir = "roms\Roms\*"
+			$romDir = Join-Path -Path "roms" -ChildPath "Roms"
+			$romDir = Join-Path -Path $romDir -ChildPath "*"
 			Copy-Item -Path (Join-Path -Path $garlicPath -ChildPath $romDir) -Destination $GarlicROMDrive -Recurse -Force -Confirm:$false
 		}
 		catch {
