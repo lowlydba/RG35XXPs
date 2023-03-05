@@ -77,7 +77,7 @@ function Update-GpGarlic {
 		[ValidateScript({ Test-Path -Path $_ })]
 		[string]$2ndGarlicROMDrive,
 		[Parameter (Mandatory = $false)]
-		[bool]$ClearTempPath = $false,
+		[bool]$ClearTempPath = $true,
 		[Parameter (Mandatory = $false)]
 		[string]$BIOSPath,
 		[Parameter (Mandatory = $false)]
@@ -134,6 +134,6 @@ function Update-GpGarlic {
 		Copy-GpPersonalFiles -BIOSPath $BIOSPath -ROMPath $ROMPath -Destination $2ndGarlicROMDrive
 
 		# Tada!
-		Invoke-GpThanks
+		Invoke-GpThanks -Action "updated"
 	}
 }

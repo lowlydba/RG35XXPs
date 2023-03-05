@@ -8,7 +8,7 @@ function Expand-Gp7zip {
     )
     try {
         Write-Verbose -Message "Expanding '$ArchivePath' to '$TargetPath'"
-        Invoke-Expression -Command "7z e $ArchivePath -o'$TargetPath'"
+        Invoke-Expression -Command "7z x $ArchivePath -o'$TargetPath'"
     }
     catch {
         Write-Error -Message "Error extracting GarlicOS: $($_.Exception.Message)"
