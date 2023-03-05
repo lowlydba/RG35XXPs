@@ -17,6 +17,25 @@ Docs @ <https://lowlydba.github.io/GarlicPs/>
 
 Contributions are welcome! Please adhere to the linting rules and try to follow existing style.
 
+## Instructions
+
+1. Make sure prerequisite cli utilities are installed.
+2. [Install](https://learn.microsoft.com/en-us/powershell/scripting/developer/module/installing-a-powershell-module?view=powershell-7.3) GarlicPs
+3. Import the module:
+
+    ```pwsh
+    Import-Module GarlicPs
+    ```
+
+4. Run the install or update functions:
+
+    ```pwsh
+    Install-GpGarlic ...
+    Update-GpGarlic ...
+    ```
+
+5. Profit!
+
 ## Limitations
 
 ### Resizing Partitions
@@ -26,6 +45,9 @@ I haven't been able to find a reliable CLI tool to do this, but please open an e
 
 In the mean time, you can add a 👍🏻 emoji to the [request][balena-request] to include this capability
 as a feature in balena-cli.
+
+* For a single SD card, expansion of the default ROM partition should be done post-install manually.
+* For a dual SD cards, expansion of the secondary card ROM partition should be done before installing/updating.
 
 ## Roadmap
 
