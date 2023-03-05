@@ -118,20 +118,18 @@ function Install-GpGarlic {
 			$ROMVolumeFriendlyName = "GARLICROM"
 			$targetDiskPartitions = Get-Partition -DiskNumber $TargetDeviceNumber
 			$ROMPartition = $targetDiskPartitions[-1] # Feels hacky, maybe a better way to identify other than its index as last partition?
-			$ROMDriveLetter = (Get-Partition -DiskNumber $TargetDeviceNumber -PartitionNumber $ROMPartition.PartitionNumber).DriveLetter
-			if ($null -eq $ROMDriveLetter) {
+			if (!(Get-Partition -DiskNumber $TargetDeviceNumber -PartitionNumber $ROMPartition.PartitionNumber).DriveLetter) {
 				# Assign drive letter to ROM partition
-				Write-Verbose -Message "Setting #$TargetDeviceNumber, partition #$($ROMPartition.PartitionNumber) to drive letter '$ROMDriveLetter' with friendly name '$ROMVolumeFriendlyName'."
+				Write-Verbose -Message "Setting drive #$TargetDeviceNumber, partition #$($ROMPartition.PartitionNumber) to drive letter '$ROMDriveLetter' with friendly name '$ROMVolumeFriendlyName'."
 				Set-Partition -DiskNumber $TargetDeviceNumber -PartitionNumber $ROMPartition.PartitionNumber -NewDriveLetter $ROMDriveLetter
-				Set-Volume -DriveLetter $ROMDriveLetter -NewFileSystemLabel $ROMVolumeFriendlyName
 			}
 			else {
 				Write-Verbose -Message "Found default ROM partition as volume '$ROMDriveLetter'"
-				$existingDriveLabel = (Get-Volume -DriveLetter $ROMDriveLetter).FriendlyName
-				if ($null -eq $existingDriveLabel) {
-					Write-Verbose -Message "Adding friendly name '$ROMVolumeFriendlyName' to ROM partition"
-					Set-Volume -DriveLetter $ROMDriveLetter -NewFileSystemLabel $ROMVolumeFriendlyName
-				}
+
+			}
+			if (!((Get-Volume -DriveLetter $ROMDriveLetter).FileSystemLabel)) {
+				Write-Verbose -Message "Adding friendly name '$ROMVolumeFriendlyName' to '$ROMDriveLetter' drive"
+				Set-Volume -DriveLetter $ROMDriveLetter -NewFileSystemLabel $ROMVolumeFriendlyName
 			}
 			$ROMDrivePath = (Get-PSDrive -Name $ROMDriveLetter).Root
 		}
