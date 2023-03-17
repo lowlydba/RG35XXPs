@@ -4,7 +4,7 @@ Powershell installer/updated for custom firmware on the [Anbernic RG35xx][rg35xx
 
 Only tested on Windows, YMMV.
 
-Docs @ <https://lowlydba.github.io/RG35xxPs/>
+Docs @ <https://lowlydba.github.io/RG35XXPs/>
 
 ## Requirements
 
