@@ -1,9 +1,14 @@
 function Invoke-RgThanks {
     [CmdletBinding()]
     param (
-        [Parameter (Mandatory = $true)]
+        [Parameter (Mandatory = $false)]
         [string]$Action
     )
-    Write-Host "🧄  Batocera successfully $Action!" -ForegroundColor DarkYellow
-    Write-Host "☕  Buy the author a coffee if you enjoy this project - https://www.buymeacoffee.com/johnmcc"-ForegroundColor Cyan
+    if ($PSBoundParameters.ContainsKey('Action')) {
+        Write-Host "🎮  Batocera successfully $Action!" -ForegroundColor DarkYellow
+    }
+    else {
+        Write-Host "☕  Buy lowlydba a coffee if you enjoy this PowerShell project - https://buymeacoffee.com/johnmcc"-ForegroundColor Cyan
+    }
+
 }

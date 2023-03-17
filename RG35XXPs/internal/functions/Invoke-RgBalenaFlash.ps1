@@ -7,6 +7,7 @@ function Invoke-RgBalenaFlash {
     )
     try {
         Write-Verbose -Message "Flashing Batocera image to drive '$targetBalenaDrive' (this may take a while)"
+        Invoke-RgThanks
         $flashCmd = "balena local flash '$ImgPath' --drive '$targetBalenaDrive' -y"
         Invoke-Expression -Command $flashCmd -ErrorAction 'Stop'
     }

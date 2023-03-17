@@ -24,7 +24,7 @@
 	RequiredModules = @( @{ModuleName = 'Microsoft.PowerShell.Management'; ModuleVersion = '1.0.0' })
 
 	# Functions to export from this module
-	FunctionsToExport = @('Update-RgBatocera', 'Install-RgBatocera')
+	FunctionsToExport = @('Install-RgBatocera')
 
 	# Cmdlets to export from this module
 	CmdletsToExport = ''

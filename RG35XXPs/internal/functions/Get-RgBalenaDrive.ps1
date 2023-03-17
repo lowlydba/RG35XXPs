@@ -22,7 +22,7 @@ function Get-RgBalenaDrive {
         }
     }
     if ($TargetDeviceId) {
-        Write-Verbose -Message "Found device '$TargetDeviceId'"
+        Write-Verbose -Message "Found flashable drive '$TargetDeviceId' for device #$TargetDeviceNumber"
         return $TargetDeviceId
     }
     else {
