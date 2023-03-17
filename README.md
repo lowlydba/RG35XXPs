@@ -32,11 +32,7 @@ as a feature in balena-cli.
 
 Potential improvements:
 
-* Find a way to parse the os version to avoid accidental downgrades or reinstalls of same version
 * Publish module to PS Gallery for easier upkeep
-* Handle USB Gamepad support enabling
-* Handle ADB support enabling
-* Also support [MinUI](https://github.com/shauninman/union-minui/) install/update
 
 [balena-cli]: https://github.com/balena-io/balena-cli/blob/master/INSTALL.md
 [balena-request]: https://github.com/balena-io/etcher/issues/1451
