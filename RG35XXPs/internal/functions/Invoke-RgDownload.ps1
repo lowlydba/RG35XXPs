@@ -14,7 +14,7 @@ function Invoke-RgDownload {
             $BatoceraZipPath = Join-Path -Path $TempPath -ChildPath $BatoceraZip
 
             Write-Verbose -Message "Downloading from '$BatoceraUri'"
-            Invoke-WebRequest -Uri $BatoceraUri -OutFile $BatoceraZipPath -ContentType "application/x-7z-compressed" -Verbose:$false
+            Invoke-WebRequest -Uri $BatoceraUri -OutFile $BatoceraZipPath -ContentType "application/zip" -Verbose:$false
             Write-Verbose -Message "Batocera saved to $BatoceraZipPath"
 
             return $BatoceraZipPath

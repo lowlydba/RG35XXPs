@@ -8,8 +8,8 @@
 .PARAMETER LocalFile
     The full path of a copy of RG35XX-MicroSDCardImage.7z locally available. If not supplied, it is downloaded.
 
-.PARAMETER BatoceraURL
-    The URL of the Batocera update file
+.PARAMETER Version
+    The version tag to download and install.
 
 .PARAMETER TempPath
     Where files will be downloaded and decompressed to during the installation.
@@ -19,9 +19,6 @@
 
 .PARAMETER ClearTempPath
     Whether to recursively empty the TempPath before using it. Recommended.
-
-.PARAMETER BIOSPath
-    Path to personal BIOS files that will be copied after installation.
 
 .PARAMETER ROMPath
     Path to personal ROM files that will be copied after installation.
@@ -60,7 +57,7 @@ function Install-RgBatocera {
 		[Parameter (Mandatory = $true, ParameterSetName = "local")]
 		[string]$LocalFile,
 		[Parameter (Mandatory = $true, ParameterSetName = "remote")]
-		[string]$BatoceraURL,
+		[string]$Version = "latest",
 		[Parameter (Mandatory = $false)]
 		[string]$TempPath = (Join-Path -Path ([System.IO.Path]::GetTempPath()) "\RG35XXPs"),
 		[Parameter (Mandatory = $true)]
@@ -68,8 +65,6 @@ function Install-RgBatocera {
 		[int]$TargetDeviceNumber,
 		[Parameter (Mandatory = $false)]
 		[bool]$ClearTempPath = $true,
-		[Parameter (Mandatory = $false)]
-		[string]$BIOSPath,
 		[Parameter (Mandatory = $false)]
 		[string]$ROMPath,
 		[Parameter (Mandatory = $false)]
@@ -80,7 +75,7 @@ function Install-RgBatocera {
 	)
 	process {
 		$BatoceraPath = Join-Path -Path $TempPath -ChildPath "\Batocera"
-		$BatoceraInstallZipName = "RG35XX-MicroSDCardImage.7z"
+		$BatoceraInstallZipName = "RG35XX-Batocera.7z"
 
 		## Get disk info
 		# Balena is case sensitive, so get the deviceId from its util to avoid issues
@@ -91,8 +86,16 @@ function Install-RgBatocera {
 
 		## Step 1 - Download & extract Batocera
 		if ($LocalFile -eq "") {
-			$BatoceraInstallUri = $BatoceraURL
-			$BatoceraZipPath = Invoke-RgDownload -TempPath $TempPath -BatoceraZip $BatoceraInstallZipName -BatoceraUri $BatoceraInstallUri
+			$assetFilter = "*.img.zip"
+			if ($Version -eq "latest") {
+				$apiUrl = "https://api.github.com/repos/rg35xx-cfw/rg35xx-cfw.github.io/releases/latest"
+				$assetUrl = ((Invoke-WebRequest $apiUrl | ConvertFrom-Json).assets | Where-Object name -like $assetFilter).browser_download_url
+			}
+			else {
+				$apiUrl = "https://api.github.com/repos/rg35xx-cfw/rg35xx-cfw.github.io/releases"
+				$assetUrl = ((Invoke-WebRequest $apiUrl | ConvertFrom-Json | Where-Object tag_name -eq $Version).assets | Where-Object name -like $assetFilter).browser_download_url
+			}
+			$BatoceraZipPath = Invoke-RgDownload -TempPath $TempPath -BatoceraZip $BatoceraInstallZipName -BatoceraUri $assetUrl
 		}
 		else {
 			$BatoceraZipPath = $LocalFile
@@ -136,16 +139,8 @@ function Install-RgBatocera {
 			Write-Error -Message "Error auto-assigning drive letter to default ROM partition: $($_.Exception.Message)"
 		}
 
-		## Step 5 - Copy ROM & BIOS data to 2nd SD Card
-		if ($2ndSDDrive -ne '') {
-			Write-Verbose -Message "Copying ROM and BIOS data from '$ROMDrivePath' to '$2ndSDDrive'"
-			$BatoceraROMPath = Join-Path -Path $ROMDrivePath -ChildPath "Roms"
-			$BatoceraBIOSPath = Join-Path -Path $ROMDrivePath -ChildPath "BIOS"
-			Copy-RgBatoceraFiles -BIOSPath $BatoceraBIOSPath -ROMPath $BatoceraROMPath -Destination $2ndSDDrive
-		}
-
 		## Step 6 - Copy personal files
-		Copy-RgPersonalFiles -BIOSPath $BIOSPath -ROMPath $ROMPath -Destination $ROMDrivePath
+		Copy-RgPersonalFiles -ROMPath $ROMPath -Destination $ROMDrivePath
 
 		## Tada!
 		Invoke-RgThanks -Action "installed"
