@@ -99,7 +99,7 @@ function Install-RgBatocera {
 		}
 
 		# Extract the archive
-		Expand-Rg7Zip -ArchivePath $BatoceraZipPath -TargetPath $BatoceraPath
+		Expand-Archive -Path $BatoceraZipPath -DestinationPath $BatoceraPath
 
 		## Step 2 - Flash Batocera.img to SD
 		$BatoceraImgPath = Join-Path -Path $BatoceraPath -ChildPath "Batocera.img"

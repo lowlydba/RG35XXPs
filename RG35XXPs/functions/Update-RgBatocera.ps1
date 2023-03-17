@@ -105,7 +105,7 @@ function Update-RgBatocera {
 		}
 
 		## Step 3 - Extract the archive
-		Expand-Rg7Zip -ArchivePath $BatoceraZipPath -TargetPath $BatoceraPath
+		Expand-Archive -Path $BatoceraZipPath -DestinationPath $BatoceraPath
 
 		## Step 4 - Update Batocera
 		# Only files on the primary SD card need to be modified, the misc partition and rom partition
