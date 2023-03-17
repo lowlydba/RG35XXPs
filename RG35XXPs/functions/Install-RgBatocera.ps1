@@ -1,15 +1,15 @@
 <#
 .SYNOPSIS
-    Install Batocera!
+    Install Batocera Linux.
 
 .DESCRIPTION
-    Automate installation of Batocera.
+    Automate the installation of Batocera on an SD card for the RG35XX.
 
 .PARAMETER LocalFile
-    The full path of a copy of Batocera locally available. If not supplied, it is downloaded.
+    The full path of a copy of Batocera locally available. If not supplied, it is downloaded from Github.
 
 .PARAMETER Version
-    The version tag to download and install.
+    The version tag to download and install. See https://github.com/rg35xx-cfw/rg35xx-cfw.github.io/tags for valid version tags.
 
 .PARAMETER TempPath
     Where files will be downloaded and decompressed to during the installation.
@@ -20,32 +20,17 @@
 .PARAMETER ClearTempPath
     Whether to recursively empty the TempPath before using it. Recommended.
 
-.PARAMETER ROMPath
-    Path to personal ROM files that will be copied after installation.
-
-.PARAMETER ExpandPartitionThresholdMb
-	The threshold in MB of unallocated space on the target disk.
-	If exceeded, the ROM partition will be expanded to utilize the space.
-
-.PARAMETER ROMDriveLetter
-	If the ROM partition does not get assigned a drive letter on re-insert, assign it this one
-	to make it accessible. If drive letter is already assigned, this value is ignored.
-
-.PARAMETER 2ndSDDrive
-	If using two SD cards, the drive letter of the FAT32 formatted drive for ROMs and BIOS files.
-	Must be in a valid path format, i.e. 'X:\'
-
 .EXAMPLE
-    Install-RgBatocera -BatoceraUrl "https://www.patreon.com/file?h=76561333&i=13249827" -TargetDeviceNumber 2 -ClearTempPath $true
+    Install-RgBatocera -Version "rg35xx_batocera_lite_alpha_v0.2" -TargetDeviceNumber 2 -ClearTempPath $true
 
-	Fetches Batocera from a Patreon attachment URL and installs it on an SD card identified as Disk #2.
+	Fetches Batocera based on a specific version installs it on an SD card identified as Disk #2.
 	Clears any files that may exist in the temp path.
 
 
 .EXAMPLE
-	Install-RgBatocera -LocalFile "C:\Users\lowlydba\Downloads\RG35XX-MicroSDCardImage.7z" -TargetDeviceNumber 1 -ClearTempPath $true -TempPath "C:\temp"
+	Install-RgBatocera -LocalFile "C:\Users\lowlydba\Downloads\batocera_lite_rg35xx_20230316.img.zip" -TargetDeviceNumber 3 -ClearTempPath $true -TempPath "C:\temp"
 
-	Uses a local Batocera file and installs it on an SD card identified as Disk #1.
+	Uses a local Batocera file and installs it on an SD card identified as Disk #3.
 	Stores temp files in C:\temp.
 	Clears any files that may already exist in C:\temp.
 
@@ -64,14 +49,7 @@ function Install-RgBatocera {
 		[ValidateRange(1, 99)]
 		[int]$TargetDeviceNumber,
 		[Parameter (Mandatory = $false)]
-		[bool]$ClearTempPath = $true,
-		[Parameter (Mandatory = $false)]
-		[string]$ROMPath,
-		[Parameter (Mandatory = $false)]
-		[string]$ROMDriveLetter = "R",
-		[Parameter (Mandatory = $false)]
-		[ValidateScript({ Test-Path -Path $_ })]
-		[string]$2ndSDDrive
+		[bool]$ClearTempPath = $true
 	)
 	process {
 		$BatoceraPath = Join-Path -Path $TempPath -ChildPath "\Batocera"
@@ -111,37 +89,13 @@ function Install-RgBatocera {
 			Invoke-RgBalenaFlash -ImgPath $BatoceraImgPath -TargetDrive $targetBalenaDrive
 		}
 
-		# ## Step 3 - Eject and re-insert SD
-		# Write-Output ""
-		# Write-Output "Safely eject the SD card, then re-insert it."
-		# Read-Host "Press enter to continue"
+		# Maybe future code to format remaining space on SD card + copy ROMs over
+		# but this is tricky with Windows volume format limitations
+		# https://wiki.batocera.org/batocera.linux_architecture#using_an_alternative_filesystem_for_userdata
+		# With multi-SD card setups common, that is a one-time setup out of scope for this
+		# and you can just use this to flash the OS as many times as desired
 
-		# ## Step 4 - Configure FAT32 partition if needed, doesn't always auto-assign drive
-		# try {
-		# 	$ROMVolumeFriendlyName = "BatoceraROM"
-		# 	$targetDiskPartitions = Get-Partition -DiskNumber $TargetDeviceNumber
-		# 	$ROMPartition = $targetDiskPartitions[-1] # Feels hacky, maybe a better way to identify other than its index as last partition?
-		# 	if (!(Get-Partition -DiskNumber $TargetDeviceNumber -PartitionNumber $ROMPartition.PartitionNumber).DriveLetter) {
-		# 		# Assign drive letter to ROM partition
-		# 		Write-Verbose -Message "Setting drive #$TargetDeviceNumber, partition #$($ROMPartition.PartitionNumber) to drive letter '$ROMDriveLetter' with friendly name '$ROMVolumeFriendlyName'."
-		# 		Set-Partition -DiskNumber $TargetDeviceNumber -PartitionNumber $ROMPartition.PartitionNumber -NewDriveLetter $ROMDriveLetter
-		# 	}
-		# 	else {
-		# 		Write-Verbose -Message "Found default ROM partition as volume '$ROMDriveLetter'"
-
-		# 	}
-		# 	if (!((Get-Volume -DriveLetter $ROMDriveLetter).FileSystemLabel)) {
-		# 		Write-Verbose -Message "Adding friendly name '$ROMVolumeFriendlyName' to '$ROMDriveLetter' drive"
-		# 		Set-Volume -DriveLetter $ROMDriveLetter -NewFileSystemLabel $ROMVolumeFriendlyName
-		# 	}
-		# 	$ROMDrivePath = (Get-PSDrive -Name $ROMDriveLetter).Root
-		# }
-		# catch {
-		# 	Write-Error -Message "Error auto-assigning drive letter to default ROM partition: $($_.Exception.Message)"
-		# }
-
-		# ## Step 6 - Copy personal files
-		# Copy-RgPersonalFiles -ROMPath $ROMPath -Destination $ROMDrivePath
+		# Tada!
 		Invoke-RgThanks -Action "installed"
 	}
 }
