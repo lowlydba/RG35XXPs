@@ -1,6 +1,6 @@
 # RG35xxPs
 
-Powershell installer/updated for custom firmware on the [Anbernic RG35xx][rg35xx] handheld game system.
+Powershell installer/updated for custom [Batocera firmware](https://github.com/rg35xx-cfw) on the [Anbernic RG35xx][rg35xx] handheld game system.
 
 Only tested on Windows, YMMV.
 
