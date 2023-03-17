@@ -142,6 +142,6 @@ function Install-RgBatocera {
 
 		# ## Step 6 - Copy personal files
 		# Copy-RgPersonalFiles -ROMPath $ROMPath -Destination $ROMDrivePath
-		# Invoke-RgThanks -Action "installed"
+		Invoke-RgThanks -Action "installed"
 	}
 }

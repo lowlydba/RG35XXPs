@@ -8,9 +8,7 @@ Docs @ <https://lowlydba.github.io/RG35XXPs/>
 
 ## Requirements
 
-### Other
-
-* [balena-cli][balena-cli] (command line version of balenaEtcher) installed and added to PATH
+* [balena-cli][balena-cli] (command line version of balenaEtcher)
 
 ## Contributing
 
@@ -22,11 +20,11 @@ Contributions are welcome! Please adhere to the linting rules and try to follow 
 
 ### Resizing Partitions
 
-Right now re/sizing FAT32 volumes (i.e. the ROMS partition) on Windows > 32GB isn't doable without third party tools.
+Right now re/sizing FAT32 volumes (i.e. the ROMS partition) on Windows for > 32GB isn't doable without third party tools.
 I haven't been able to find a reliable CLI tool to do this, but please open an enhancement request if you know of one.
 
-In the mean time, you can add a 👍🏻 emoji to the [request][balena-request] to include this capability
-as a feature in balena-cli.
+In the mean time, you can add a 👍🏻 to the [request][balena-request] to include this capability
+as a feature in balena-cli so that large SD cards could be auto-formatted and loaded with ROMs via this module.
 
 ## Roadmap
 

@@ -8,7 +8,6 @@ function Invoke-RgThanks {
         Write-Host "🎮  Batocera successfully $Action!" -ForegroundColor DarkYellow
     }
     else {
-        Write-Host "☕  Buy lowlydba a coffee if you enjoy this PowerShell project - https://buymeacoffee.com/johnmcc"-ForegroundColor Cyan
+        Write-Host "☕  Buy lowlydba a coffee if you enjoy this PowerShell project - https://buymeacoffee.com/johnmcc" -ForegroundColor Cyan
     }
-
 }
