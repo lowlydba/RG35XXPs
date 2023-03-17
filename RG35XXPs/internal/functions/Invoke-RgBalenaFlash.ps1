@@ -1,4 +1,4 @@
-function Invoke-GpBalenaFlash {
+function Invoke-RgBalenaFlash {
     [CmdletBinding()]
     param (
         [Parameter (Mandatory = $true)]
@@ -6,11 +6,11 @@ function Invoke-GpBalenaFlash {
         [string]$ImgPath
     )
     try {
-        Write-Verbose -Message "Flashing GarlicOS image to drive '$targetBalenaDrive' (this may take a while)"
+        Write-Verbose -Message "Flashing Batocera image to drive '$targetBalenaDrive' (this may take a while)"
         $flashCmd = "balena local flash '$ImgPath' --drive '$targetBalenaDrive' -y"
         Invoke-Expression -Command $flashCmd -ErrorAction 'Stop'
     }
     catch {
-        Write-Error -Message "Error flashing GarlicOS image to disk using command "$flashCmd": $($_.Exception.Message)"
+        Write-Error -Message "Error flashing Batocera image to disk using command "$flashCmd": $($_.Exception.Message)"
     }
 }

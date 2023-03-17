@@ -1,6 +1,6 @@
 ﻿@{
 	# Script module or binary module file associated with this manifest
-	RootModule = 'GarlicPs.psm1'
+	RootModule = 'RG35XXPs.psm1'
 
 	# Version number of this module.
 	ModuleVersion = '0.5.0'
@@ -15,7 +15,7 @@
 	Copyright = 'Copyright (c) 2023 lowlydba / John McCall'
 
 	# Description of the functionality provided by this module
-	Description = 'A helper utility for GarlicOS.'
+	Description = 'A helper utility for Batocera.'
 
 	# Minimum version of the Windows PowerShell engine required by this module
 	PowerShellVersion = '5.0'
@@ -24,7 +24,7 @@
 	RequiredModules = @( @{ModuleName = 'Microsoft.PowerShell.Management'; ModuleVersion = '1.0.0' })
 
 	# Functions to export from this module
-	FunctionsToExport = @('Update-GpGarlic', 'Install-GpGarlic')
+	FunctionsToExport = @('Update-RgBatocera', 'Install-RgBatocera')
 
 	# Cmdlets to export from this module
 	CmdletsToExport = ''

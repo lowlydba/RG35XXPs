@@ -1,0 +1,11 @@
+﻿TOPIC
+	about_RG35XXPs
+
+SHORT DESCRIPTION
+	Helper utility for Batocera and the RG35xx handheld system.
+
+LONG DESCRIPTION
+	Helper utility for Batocera and the RG35xx handheld system.
+
+KEYWORDS
+	rg35xx Batocera-os

@@ -9,7 +9,7 @@ catch {
     Write-Error -Message "balena cli not installed and/or not in PATH environment."
 }
 
-# Hacky check for 7zip cli - needed since Garlic is distribued as .7zip
+# Hacky check for 7zip cli - needed since Batocera is distribued as .7zip
 try {
     Invoke-Expression "7z" | Out-Null
 }

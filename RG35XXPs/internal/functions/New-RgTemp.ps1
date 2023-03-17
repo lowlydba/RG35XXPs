@@ -1,4 +1,4 @@
-function New-GpTemp {
+function New-RgTemp {
 
     [CmdletBinding()]
     param (
@@ -7,14 +7,14 @@ function New-GpTemp {
         [Parameter (Mandatory = $false)]
         [bool]$ClearTempPath = $false,
         [Parameter (Mandatory = $true)]
-        [string]$GarlicPath
+        [string]$BatoceraPath
     )
     process {
         if ((Test-Path -Path $TempPath) -and (Get-ChildItem -Path $TempPath)) {
             if ($ClearTempPath -eq $true) {
                 Write-Verbose -Message "Clearing existing temp dir '$TempPath'"
                 Remove-Item -Path $TempPath -Recurse -Force -Confirm:$false
-                New-Item -Path $GarlicPath -ItemType Directory | Out-Null
+                New-Item -Path $BatoceraPath -ItemType Directory | Out-Null
             }
         }
         else {
@@ -22,8 +22,8 @@ function New-GpTemp {
             if (!(Test-Path -Path $TempPath)) {
                 New-Item -Path $TempPath -ItemType Directory | Out-Null
             }
-            if (!(Test-Path -Path $GarlicPath)) {
-                New-Item -Path $GarlicPath -ItemType Directory | Out-Null
+            if (!(Test-Path -Path $BatoceraPath)) {
+                New-Item -Path $BatoceraPath -ItemType Directory | Out-Null
             }
         }
     }

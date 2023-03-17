@@ -1,4 +1,4 @@
-function Get-GpBalenaDrive {
+function Get-RgBalenaDrive {
     [CmdletBinding()]
     param (
         [Parameter (Mandatory = $true)]

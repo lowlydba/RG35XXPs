@@ -1,4 +1,4 @@
-function Copy-GpGarlicFiles {
+function Copy-RgBatoceraFiles {
     [CmdletBinding()]
     param (
         [Parameter (Mandatory = $false)]
@@ -11,17 +11,17 @@ function Copy-GpGarlicFiles {
     try {
         # BIOS
         if ($BIOSPath -ne '') {
-            Write-Verbose -Message "Copying GarlicOS BIOS files from '$ROMPath' to '$ROMDestinationPath'"
+            Write-Verbose -Message "Copying Batocera BIOS files from '$ROMPath' to '$ROMDestinationPath'"
             Copy-Item -Path $BIOSPath -Destination $Destination -Recurse -Force -Confirm:$false
         }
 
         # ROM
         if ($ROMPath -ne '') {
-            Write-Verbose -Message "Copying GarlicOS ROM files from '$ROMPath' to '$ROMDestinationPath'"
+            Write-Verbose -Message "Copying Batocera ROM files from '$ROMPath' to '$ROMDestinationPath'"
             Copy-Item -Path $ROMPath -Destination $Destination -Recurse -Force -Confirm:$false
         }
     }
     catch {
-        Write-Error -Message "Error copying GarlicOS files: $($_.Exception.Message)"
+        Write-Error -Message "Error copying Batocera files: $($_.Exception.Message)"
     }
 }
